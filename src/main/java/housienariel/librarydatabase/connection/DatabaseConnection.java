@@ -3,7 +3,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Connection;
 
-public class Main {
+public class DatabaseConnection {
     private static final String URL = "jdbc:mysql://localhost:3306/Library";
     private static final String USER = "root"; //change this according to your MySQL username and password
     private static final String PASSWORD = "Hou2003Sql";
