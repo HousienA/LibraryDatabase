@@ -3,6 +3,7 @@ package housienariel.librarydatabase.model.queries;
 import housienariel.librarydatabase.connection.DatabaseConnection;
 import housienariel.librarydatabase.model.*;
 import housienariel.librarydatabase.model.dao.BookDAO;
+import housienariel.librarydatabase.model.BooksDbException;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -87,7 +88,7 @@ public class BookQuery implements BookDAO {
         }
     }
 
-
+    @Override
     public void addRatingToBook(String bookISBN, Rating rating) throws BooksDbException {
         try {
             connection.setAutoCommit(false);
