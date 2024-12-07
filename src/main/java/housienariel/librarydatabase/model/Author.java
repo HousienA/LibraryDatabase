@@ -4,23 +4,21 @@ import java.util.Date;
 import java.util.List;
 
 public class Author {
-    private int authorId;
+    private Integer authorId;
     private String name;
     private Date authorDob;
-    private List<Book> books;
 
-    public Author(int authorId, String name, Date authorDob, List<Book> books) {
+    public Author(Integer authorId, String name, Date authorDob) {
         this.authorId = authorId;
         this.name = name;
         this.authorDob = authorDob;
-        this.books = books;
     }
 
-    public int getAuthorId() {
+    public Integer getAuthorId() {
         return authorId;
     }
 
-    public void setAuthorId(int authorId) {
+    public void setAuthorId(Integer authorId) {
         this.authorId = authorId;
     }
 
@@ -40,11 +38,4 @@ public class Author {
         this.authorDob = authorDob;
     }
 
-    public List<Book> getBooks() {
-        return books;
-    }
-
-    public void setBooks(List<Book> books) {
-        this.books = books;
-    }
 }

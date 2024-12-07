@@ -1,19 +1,19 @@
 package housienariel.librarydatabase.model;
 
 public class Genre {
-    private int genreId;
+    private Integer genreId;
     private String genreName;
 
-    public Genre(int genreId, String genreName) {
+    public Genre(Integer genreId, String genreName) {
         this.genreId = genreId;
         this.genreName = genreName;
     }
 
-    public int getGenreId() {
+    public Integer getGenreId() {
         return genreId;
     }
 
-    public void setGenreId(int genreId) {
+    public void setGenreId(Integer genreId) {
         this.genreId = genreId;
     }
 

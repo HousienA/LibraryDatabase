@@ -1,21 +1,21 @@
 package housienariel.librarydatabase.model;
 
 public class Rating {
-    private int ratingId;
+    private Integer ratingId;
     private String bookISBN;
     private int ratingValue;
 
-    public Rating(int ratingId, String bookISBN, int ratingValue) {
+    public Rating(Integer ratingId, String bookISBN, int ratingValue) {
         this.ratingId = ratingId;
         this.bookISBN = bookISBN;
         this.ratingValue = ratingValue;
     }
 
-    public int getRatingId() {
+    public Integer getRatingId() {
         return ratingId;
     }
 
-    public void setRatingId(int ratingId) {
+    public void setRatingId(Integer ratingId) {
         this.ratingId = ratingId;
     }
 
