@@ -1,82 +1,220 @@
 package housienariel.librarydatabase.controller;
 
-import housienariel.librarydatabase.model.Author;
-import housienariel.librarydatabase.model.BooksDbException;
-import housienariel.librarydatabase.model.dao.AuthorDAO;
+import housienariel.librarydatabase.model.*;
+import housienariel.librarydatabase.model.dao.*;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.beans.property.SimpleStringProperty;
 
-import java.util.Date;
+import java.net.URL;
+import java.time.LocalDate;
+import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.ResourceBundle;
 
-public class AuthorController {
-    private static final Logger LOGGER = Logger.getLogger(AuthorController.class.getName());
-    private final AuthorDAO authorQ;
+public class AuthorController implements Initializable {
+    @FXML private TextField nameField;
+    @FXML private DatePicker dobPicker;
+    @FXML private TableView<Author> authorTableView;
+    @FXML private Button addButton;
+    @FXML private Button updateButton;
+    @FXML private Button clearButton;
+    @FXML private TextField searchAuthorField;
 
-    public AuthorController(AuthorDAO authorQ) {
-        if (authorQ == null) {
-            throw new IllegalArgumentException("Query interface cannot be null");
-        }
-        this.authorQ = authorQ;
+    private AuthorDAO authorDAO;
+    private Author selectedAuthor;
+    private WriterDAO writerDAO;
+    private BookDAO bookDAO;
+
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        // Only do setup that doesn't require DAOs
+        setupTableView();
+        setupSelectionListener();
+        updateButton.setDisable(true);
     }
 
-    public void addAuthor(Integer id, String name, Date dob) throws BooksDbException {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("Author name cannot be null or empty");
+    public void injectDAOs(AuthorDAO authorDAO, WriterDAO writerDAO, BookDAO bookDAO) {
+        this.authorDAO = authorDAO;
+        this.writerDAO = writerDAO;
+        this.bookDAO = bookDAO;
+
+        setupBooksColumn();
+        loadAuthors();
+    }
+
+    @FXML
+    private void handleAddAuthor() {
+        if (!validateInput()) {
+            return;
         }
 
-        Author author = new Author(id, name, dob);
         try {
-            authorQ.addAuthor(author);
-            LOGGER.log(Level.INFO, "Author added successfully: {0}", author);
+            Author author = new Author(
+                    0,  // ID will be set by database
+                    nameField.getText().trim(),
+                    Date.valueOf(dobPicker.getValue())
+            );
+
+            authorDAO.addAuthor(author);
+            clearFields();
+            loadAuthors();
+            showSuccess("Author added successfully");
+
         } catch (BooksDbException e) {
-            LOGGER.log(Level.SEVERE, "Error adding author", e);
-            throw e;
+            showError("Error adding author: " + e.getMessage());
         }
     }
 
-    public Author getAuthorById(int authorId) throws BooksDbException {
+    @FXML
+    private void handleUpdateAuthor() {
+        if (selectedAuthor == null) {
+            showError("Please select an author to update");
+            return;
+        }
+
+        if (!validateInput()) {
+            return;
+        }
+
         try {
-            return authorQ.getAuthorById(authorId);
+            selectedAuthor.setName(nameField.getText().trim());
+            selectedAuthor.setAuthorDob(Date.valueOf(dobPicker.getValue()));
+
+            authorDAO.updateAuthor(selectedAuthor);
+            clearFields();
+            loadAuthors();
+            showSuccess("Author updated successfully");
+            updateButton.setDisable(true);
+
         } catch (BooksDbException e) {
-            LOGGER.log(Level.SEVERE, "Error retrieving author by ID", e);
-            throw e;
+            showError("Error updating author: " + e.getMessage());
         }
     }
 
-    public void updateAuthor(int authorId, String name, Date dob) throws BooksDbException {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("Author name cannot be null or empty");
+    @FXML
+    private void handleClear() {
+        clearFields();
+        selectedAuthor = null;
+        updateButton.setDisable(true);
+        addButton.setDisable(false);
+    }
+
+    @FXML
+    private void handleSearchAuthor() {
+        String searchTerm = searchAuthorField.getText().trim();
+        if (searchTerm.isEmpty()) {
+            loadAuthors();
+            return;
         }
-        if (dob == null) {
-            throw new IllegalArgumentException("Author date of birth cannot be null");
-        }
-        Author author = new Author(authorId, name, dob);
+
         try {
-            authorQ.updateAuthor(author);
-            LOGGER.log(Level.INFO, "Author updated successfully: {0}", author);
+            List<Author> authors = authorDAO.searchAuthorsByName(searchTerm);
+            authorTableView.getItems().setAll(authors);
         } catch (BooksDbException e) {
-            LOGGER.log(Level.SEVERE, "Error updating author", e);
-            throw e;
+            showError("Error searching authors: " + e.getMessage());
         }
     }
 
-    public void deleteAuthor(int authorId) throws BooksDbException {
+    private void setupTableView() {
+        TableColumn<Author, Integer> idCol = new TableColumn<>("ID");
+        idCol.setCellValueFactory(new PropertyValueFactory<>("authorId"));
+
+        TableColumn<Author, String> nameCol = new TableColumn<>("Name");
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+        TableColumn<Author, Date> dobCol = new TableColumn<>("Date of Birth");
+        dobCol.setCellValueFactory(new PropertyValueFactory<>("authorDob"));
+
+        // Book column will be added after DAOs are injected
+        authorTableView.getColumns().addAll(idCol, nameCol, dobCol);
+    }
+
+    // Add this new method to set up the books column after DAOs are available
+    private void setupBooksColumn() {
+        TableColumn<Author, String> booksCol = new TableColumn<>("Books");
+        booksCol.setCellValueFactory(data -> {
+            try {
+                List<String> bookISBNs = writerDAO.getBooksByAuthor(data.getValue().getAuthorId());
+                List<String> bookTitles = new ArrayList<>();
+                for (String isbn : bookISBNs) {
+                    Book book = bookDAO.getBookByISBN(isbn);
+                    if (book != null) {
+                        bookTitles.add(book.getTitle());
+                    }
+                }
+                return new SimpleStringProperty(String.join(", ", bookTitles));
+            } catch (BooksDbException e) {
+                return new SimpleStringProperty("Error loading books");
+            }
+        });
+
+        authorTableView.getColumns().add(booksCol);
+    }
+
+    private void setupSelectionListener() {
+        authorTableView.getSelectionModel().selectedItemProperty().addListener(
+                (obs, oldSelection, newSelection) -> {
+                    if (newSelection != null) {
+                        selectedAuthor = newSelection;
+                        populateFields(newSelection);
+                        updateButton.setDisable(false);
+                        addButton.setDisable(true);
+                    }
+                }
+        );
+    }
+
+    private void populateFields(Author author) {
+        nameField.setText(author.getName());
+        dobPicker.setValue(author.getAuthorDob().toLocalDate());
+    }
+
+    private boolean validateInput() {
+        if (nameField.getText().trim().isEmpty()) {
+            showError("Please enter author name");
+            return false;
+        }
+
+        if (dobPicker.getValue() == null) {
+            showError("Please select date of birth");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void loadAuthors() {
         try {
-            authorQ.deleteAuthor(authorId);
-            LOGGER.log(Level.INFO, "Author deleted successfully: {0}", authorId);
+            authorTableView.getItems().setAll(authorDAO.getAllAuthors());
         } catch (BooksDbException e) {
-            LOGGER.log(Level.SEVERE, "Error deleting author", e);
-            throw e;
+            showError("Error loading authors: " + e.getMessage());
         }
     }
 
-    public List<Author> getAllAuthors() throws BooksDbException {
-        try {
-            return authorQ.getAllAuthors();
-        } catch (BooksDbException e) {
-            LOGGER.log(Level.SEVERE, "Error retrieving all authors", e);
-            throw e;
-        }
+    private void clearFields() {
+        nameField.clear();
+        dobPicker.setValue(null);
+        authorTableView.getSelectionModel().clearSelection();
     }
+
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showSuccess(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Success");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+
 }

@@ -20,31 +20,32 @@ public class BookQuery implements BookDAO {
         String query = "INSERT INTO Book (ISBN, title, genre_id) VALUES (?, ?, ?)";
         try {
             connection.setAutoCommit(false);
-
             try (PreparedStatement pstmt = connection.prepareStatement(query)) {
                 pstmt.setString(1, book.getISBN());
                 pstmt.setString(2, book.getTitle());
                 pstmt.setInt(3, book.getGenre().getGenreId());
-                pstmt.executeUpdate();
 
-                // Add authors if present
-                if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
-                    addAuthorsToBook(book);
-                }
+                System.out.println("Executing insert with values:");
+                System.out.println("ISBN: " + book.getISBN());
+                System.out.println("Title: " + book.getTitle());
+                System.out.println("Genre ID: " + book.getGenre().getGenreId());
+
+                pstmt.executeUpdate();
 
                 // Add rating if present
                 if (book.getRating() != null) {
+                    System.out.println("Adding rating: " + book.getRating().getRatingValue());
                     addRatingToBook(book.getISBN(), book.getRating());
                 }
 
                 connection.commit();
             } catch (SQLException e) {
                 connection.rollback();
+                System.out.println("SQL Error: " + e.getMessage());
                 throw new BooksDbException("Error adding book", e);
-            } finally {
-                connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
+            System.out.println("Transaction Error: " + e.getMessage());
             throw new BooksDbException("Error in database transaction", e);
         }
     }
@@ -103,28 +104,36 @@ public class BookQuery implements BookDAO {
         try {
             connection.setAutoCommit(false);
 
+            System.out.println("Updating book:");
+            System.out.println("ISBN: " + book.getISBN());
+            System.out.println("New Title: " + book.getTitle());
+            System.out.println("New Genre ID: " + book.getGenre().getGenreId());
+
             try (PreparedStatement pstmt = connection.prepareStatement(query)) {
                 pstmt.setString(1, book.getTitle());
                 pstmt.setInt(2, book.getGenre().getGenreId());
                 pstmt.setString(3, book.getISBN());
-                pstmt.executeUpdate();
 
-                // Update authors
-                updateAuthorsForBook(book);
+                int rowsAffected = pstmt.executeUpdate();
+                System.out.println("Rows affected: " + rowsAffected);
 
-                // Update rating if present
+                if (rowsAffected == 0) {
+                    throw new BooksDbException("No book found with ISBN: " + book.getISBN());
+                }
+
                 if (book.getRating() != null) {
+                    System.out.println("Updating rating: " + book.getRating().getRatingValue());
                     addRatingToBook(book.getISBN(), book.getRating());
                 }
 
                 connection.commit();
             } catch (SQLException e) {
                 connection.rollback();
+                System.out.println("SQL Error: " + e.getMessage());
                 throw new BooksDbException("Error updating book", e);
-            } finally {
-                connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
+            System.out.println("Transaction Error: " + e.getMessage());
             throw new BooksDbException("Error in database transaction", e);
         }
     }
@@ -145,32 +154,31 @@ public class BookQuery implements BookDAO {
         try {
             connection.setAutoCommit(false);
 
-            // Check if book already has a rating
-            String checkQuery = "SELECT rating_id FROM Book WHERE ISBN = ?";
-            try (PreparedStatement checkStmt = connection.prepareStatement(checkQuery)) {
-                checkStmt.setString(1, bookISBN);
-                try (ResultSet rs = checkStmt.executeQuery()) {
-                    if (rs.next() && rs.getObject("rating_id") != null) {
-                        // Book already has a rating - update it
-                        int existingRatingId = rs.getInt("rating_id");
-                        String updateRatingQuery = "UPDATE Rating SET rating_value = ? WHERE rating_id = ?";
-                        try (PreparedStatement updateStmt = connection.prepareStatement(updateRatingQuery)) {
-                            updateStmt.setInt(1, rating.getRatingValue());
-                            updateStmt.setInt(2, existingRatingId);
-                            updateStmt.executeUpdate();
-                        }
-                    } else {
-                        // Book has no rating - add new one
-                        RatingQuery ratingQuery = new RatingQuery();
-                        ratingQuery.addRating(rating);
+            // Add the rating first
+            String ratingQuery = "INSERT INTO Rating (rating_value) VALUES (?)";
+            int ratingId;
+            try (PreparedStatement ratingStmt = connection.prepareStatement(ratingQuery, Statement.RETURN_GENERATED_KEYS)) {
+                ratingStmt.setInt(1, rating.getRatingValue());
+                ratingStmt.executeUpdate();
 
-                        String updateBookQuery = "UPDATE Book SET rating_id = ? WHERE ISBN = ?";
-                        try (PreparedStatement updateStmt = connection.prepareStatement(updateBookQuery)) {
-                            updateStmt.setInt(1, rating.getRatingId());
-                            updateStmt.setString(2, bookISBN);
-                            updateStmt.executeUpdate();
-                        }
+                try (ResultSet rs = ratingStmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        ratingId = rs.getInt(1);
+                        rating.setRatingId(ratingId);
+                    } else {
+                        throw new BooksDbException("Failed to get rating ID");
                     }
+                }
+            }
+
+            // Update the book with the rating_id
+            String updateBookQuery = "UPDATE Book SET rating_id = ? WHERE ISBN = ?";
+            try (PreparedStatement updateStmt = connection.prepareStatement(updateBookQuery)) {
+                updateStmt.setInt(1, rating.getRatingId());
+                updateStmt.setString(2, bookISBN);
+                int updated = updateStmt.executeUpdate();
+                if (updated == 0) {
+                    throw new BooksDbException("Book not found with ISBN: " + bookISBN);
                 }
             }
 
@@ -181,13 +189,7 @@ public class BookQuery implements BookDAO {
             } catch (SQLException rollbackEx) {
                 throw new BooksDbException("Error rolling back transaction", rollbackEx);
             }
-            throw new BooksDbException("Error adding rating to book", e);
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                throw new BooksDbException("Error resetting auto-commit", e);
-            }
+            throw new BooksDbException("Error adding rating to book: " + e.getMessage(), e);
         }
     }
 

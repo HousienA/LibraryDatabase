@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<TabPane xmlns="http://javafx.com/javafx"
+         xmlns:fx="http://javafx.com/fxml"
+         fx:controller="housienariel.librarydatabase.controller.MainController"
+         tabClosingPolicy="UNAVAILABLE">
+
+    <Tab text="Search">
+        <fx:include fx:id="searchView" source="SearchView.fxml"/>
+    </Tab>
+
+    <Tab text="Books">
+        <fx:include fx:id="bookView" source="BookView.fxml"/>
+    </Tab>
+
+    <Tab text="Authors">
+        <fx:include fx:id="authorView" source="AuthorView.fxml"/>
+    </Tab>
+
+    <Tab text="Genres">
+        <fx:include fx:id="genreView" source="GenreView.fxml"/>
+    </Tab>
+
+</TabPane>

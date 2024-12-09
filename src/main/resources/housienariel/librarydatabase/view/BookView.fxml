@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+        <?import javafx.scene.layout.*?>
+        <?import javafx.scene.control.*?>
+        <?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="housienariel.librarydatabase.controller.BookController"
+      spacing="10">
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <!-- Book Input Form -->
+    <GridPane hgap="10" vgap="10">
+        <padding><Insets bottom="10"/></padding>
+
+        <Label text="ISBN:"
+GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <TextField fx:id="isbnField" promptText="Enter ISBN"
+GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+        <Label text="Title:"
+GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <TextField fx:id="titleField" promptText="Enter title"
+GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+        <Label text="Genre:"
+GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <ComboBox fx:id="genreComboBox" promptText="Select genre"
+GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+        <Label text="Rating:"
+GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+        <ComboBox fx:id="ratingComboBox" promptText="Select rating"
+GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+    </GridPane>
+
+    <!-- Buttons -->
+    <HBox spacing="10">
+        <Button fx:id="addButton" text="Add Book"
+onAction="#handleAddBook"/>
+        <Button fx:id="updateButton" text="Update Book"
+onAction="#handleUpdateBook"/>
+        <Button fx:id="clearButton" text="Clear"
+onAction="#handleClear"/>
+    </HBox>
+
+    <!-- Book Table -->
+    <TableView fx:id="bookTableView" VBox.vgrow="ALWAYS">
+        <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+        </columnResizePolicy>
+    </TableView>
+</VBox>

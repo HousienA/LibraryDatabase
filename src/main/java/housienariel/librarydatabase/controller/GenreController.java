@@ -1,77 +1,91 @@
+// GenreController.java
 package housienariel.librarydatabase.controller;
 
-import housienariel.librarydatabase.model.BooksDbException;
-import housienariel.librarydatabase.model.Genre;
+import housienariel.librarydatabase.model.*;
 import housienariel.librarydatabase.model.dao.GenreDAO;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.net.URL;
+import java.util.ResourceBundle;
 
-public class GenreController {
-    private static final Logger LOGGER = Logger.getLogger(GenreController.class.getName());
-    private final GenreDAO genreQ;
+public class GenreController implements Initializable {
+    @FXML private TextField genreNameField;
+    @FXML private TableView<Genre> genreTableView;
+    @FXML private Button addGenreButton;
 
-    public GenreController(GenreDAO genreQ) {
-        if (genreQ == null) {
-            throw new IllegalArgumentException("Query interface cannot be null");
-        }
-        this.genreQ = genreQ;
+    private GenreDAO genreDAO;
+
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        setupTableView();
     }
 
-    public void addGenre(Integer id, String name) throws BooksDbException {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("Genre name cannot be null or empty");
+    @FXML
+    private void handleAddGenre() {
+        String genreName = genreNameField.getText().trim();
+
+        if (genreName.isEmpty()) {
+            showError("Please enter a genre name");
+            return;
         }
-        Genre genre = new Genre(id, name);
+
         try {
-            genreQ.addGenre(genre);
-            LOGGER.log(Level.INFO, "Genre added successfully: {0}", genre);
+            Genre newGenre = new Genre(0, genreName); // ID will be set by database
+            genreDAO.addGenre(newGenre);
+
+            clearFields();
+            loadGenres();
+            showSuccess("Genre added successfully");
+
         } catch (BooksDbException e) {
-            LOGGER.log(Level.SEVERE, "Error adding genre", e);
-            throw e;
+            showError("Error adding genre: " + e.getMessage());
         }
     }
 
-    public Genre getGenreById(int genreId) throws BooksDbException {
+    private void setupTableView() {
+        // Genre ID Column
+        TableColumn<Genre, Integer> idColumn = new TableColumn<>("ID");
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("genreId"));
+
+        // Genre Name Column
+        TableColumn<Genre, String> nameColumn = new TableColumn<>("Genre Name");
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("genreName"));
+
+        genreTableView.getColumns().addAll(idColumn, nameColumn);
+    }
+
+    private void loadGenres() {
         try {
-            return genreQ.getGenreById(genreId);
+            genreTableView.getItems().setAll(genreDAO.getAllGenres());
         } catch (BooksDbException e) {
-            LOGGER.log(Level.SEVERE, "Error retrieving genre by ID", e);
-            throw e;
+            showError("Error loading genres: " + e.getMessage());
         }
     }
 
-    public void updateGenre(int genreId, String name) throws BooksDbException {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("Genre name cannot be null or empty");
-        }
-        Genre genre = new Genre(genreId, name);
-        try {
-            genreQ.updateGenre(genre);
-            LOGGER.log(Level.INFO, "Genre updated successfully: {0}", genre);
-        } catch (BooksDbException e) {
-            LOGGER.log(Level.SEVERE, "Error updating genre", e);
-            throw e;
-        }
+    private void clearFields() {
+        genreNameField.clear();
     }
 
-    public void deleteGenre(int genreId) throws BooksDbException {
-        try {
-            genreQ.deleteGenre(genreId);
-            LOGGER.log(Level.INFO, "Genre deleted successfully: {0}", genreId);
-        } catch (BooksDbException e) {
-            LOGGER.log(Level.SEVERE, "Error deleting genre", e);
-            throw e;
-        }
-    }
-    public List<Genre> getAllGenres() throws BooksDbException {
-        try {
-            return genreQ.getAllGenres();
-        } catch (BooksDbException e) {
-            LOGGER.log(Level.SEVERE, "Error retrieving all genres", e);
-            throw e;
-        }
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
+    private void showSuccess(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Success");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    public void injectDAOs(GenreDAO genreDAO) {
+        this.genreDAO = genreDAO;
+        loadGenres();
+    }
 }
