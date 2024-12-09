@@ -83,4 +83,31 @@ public class AuthorQuery implements AuthorDAO {
             throw new BooksDbException("Error deleting author", e);
         }
     }
+
+    @Override
+    public List<Author> searchAuthorsByName(String namePattern) throws BooksDbException {
+        List<Author> authors = new ArrayList<>();
+        String query = """
+        SELECT DISTINCT a.*
+        FROM Author a
+        WHERE a.name LIKE ?
+        """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, "%" + namePattern + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Author author = new Author(
+                            rs.getInt("author_id"),
+                            rs.getString("name"),
+                            rs.getDate("author_dob")
+                    );
+                    authors.add(author);
+                }
+            }
+        } catch (SQLException e) {
+            throw new BooksDbException("Error searching authors by name", e);
+        }
+        return authors;
+    }
 }

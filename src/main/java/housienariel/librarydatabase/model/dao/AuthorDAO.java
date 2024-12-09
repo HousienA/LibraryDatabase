@@ -12,4 +12,5 @@ public interface AuthorDAO {
     Author getAuthorById(int authorId) throws BooksDbException;
     void updateAuthor(Author author) throws BooksDbException;
     void deleteAuthor(int authorId) throws BooksDbException;
+    List<Author> searchAuthorsByName(String namePattern) throws BooksDbException;
 }

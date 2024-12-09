@@ -9,6 +9,8 @@ import housienariel.librarydatabase.model.queries.AuthorQuery;
 
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WriterQuery implements WriterDAO {
     private final Connection connection;
@@ -61,5 +63,36 @@ public class WriterQuery implements WriterDAO {
                 throw new BooksDbException("Error resetting auto-commit", e);
             }
         }
+    }
+
+    //remove author from book
+    @Override
+    public void removeAuthorFromBook(String bookISBN, int authorId) throws BooksDbException {
+        String query = "DELETE FROM Writer WHERE book_ISBN = ? AND author_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, bookISBN);
+            stmt.setInt(2, authorId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new BooksDbException("Error removing author from book", e);
+        }
+    }
+
+    // get all books by author
+    @Override
+    public List<String> getBooksByAuthor(int authorId) throws BooksDbException {
+        List<String> bookISBNs = new ArrayList<>();
+        String query = "SELECT book_ISBN FROM Writer WHERE author_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, authorId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    bookISBNs.add(rs.getString("book_ISBN"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new BooksDbException("Error getting books for author", e);
+        }
+        return bookISBNs;
     }
 }
