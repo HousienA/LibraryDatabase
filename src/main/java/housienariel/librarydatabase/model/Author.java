@@ -1,7 +1,6 @@
 package housienariel.librarydatabase.model;
 
 import java.sql.Date;
-import java.util.List;
 
 public class Author {
     private Integer authorId;

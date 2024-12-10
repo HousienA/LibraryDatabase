@@ -1,6 +1,8 @@
 package housienariel.librarydatabase.model;
 
-public class BooksDbException extends Exception {
+import java.sql.SQLException;
+
+public class BooksDbException extends SQLException {
     public BooksDbException(String message) {
         super(message);
     }

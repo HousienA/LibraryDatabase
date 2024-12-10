@@ -3,12 +3,15 @@ package housienariel.librarydatabase.controller;
 
 import housienariel.librarydatabase.model.*;
 import housienariel.librarydatabase.model.dao.GenreDAO;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class GenreController implements Initializable {
@@ -33,17 +36,32 @@ public class GenreController implements Initializable {
             return;
         }
 
-        try {
-            Genre newGenre = new Genre(0, genreName); // ID will be set by database
-            genreDAO.addGenre(newGenre);
+        Task<Void> addGenreTask = new Task<>() {
+            @Override
+            protected Void call() throws BooksDbException {
+                Genre newGenre = new Genre(0, genreName); // ID will be set by database
+                genreDAO.addGenre(newGenre);
+                return null;
+            }
+        };
 
-            clearFields();
-            loadGenres();
-            showSuccess("Genre added successfully");
+        addGenreTask.setOnSucceeded(e -> {
+            Platform.runLater(() -> {  // Add this
+                clearFields();
+                loadGenres();
+                showSuccess();
+            });
+        });
 
-        } catch (BooksDbException e) {
-            showError("Error adding genre: " + e.getMessage());
-        }
+        addGenreTask.setOnFailed(e -> {
+            Platform.runLater(() -> {  // Add this
+                showError("Error adding genre: " + addGenreTask.getException().getMessage());
+            });
+        });
+
+        Thread thread = new Thread(addGenreTask);
+        thread.setDaemon(true);  // Add this
+        thread.start();
     }
 
     private void setupTableView() {
@@ -59,11 +77,22 @@ public class GenreController implements Initializable {
     }
 
     private void loadGenres() {
-        try {
-            genreTableView.getItems().setAll(genreDAO.getAllGenres());
-        } catch (BooksDbException e) {
-            showError("Error loading genres: " + e.getMessage());
-        }
+        Task<List<Genre>> loadGenresTask = new Task<>() {
+            @Override
+            protected List<Genre> call() throws BooksDbException {
+                return genreDAO.getAllGenres();
+            }
+        };
+
+        loadGenresTask.setOnSucceeded(e -> {
+            genreTableView.getItems().setAll(loadGenresTask.getValue());
+        });
+
+        loadGenresTask.setOnFailed(e -> {
+            showError("Error loading genres: " + loadGenresTask.getException().getMessage());
+        });
+
+        new Thread(loadGenresTask).start();
     }
 
     private void clearFields() {
@@ -77,10 +106,10 @@ public class GenreController implements Initializable {
         alert.showAndWait();
     }
 
-    private void showSuccess(String message) {
+    private void showSuccess() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Success");
-        alert.setContentText(message);
+        alert.setContentText("Genre added successfully");
         alert.showAndWait();
     }
 

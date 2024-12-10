@@ -2,6 +2,8 @@ package housienariel.librarydatabase.controller;
 
 import housienariel.librarydatabase.model.*;
 import housienariel.librarydatabase.model.dao.*;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -14,6 +16,8 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+
+// TODO: Threading to setupBooksColumn
 
 public class AuthorController implements Initializable {
     @FXML private TextField nameField;
@@ -53,21 +57,34 @@ public class AuthorController implements Initializable {
             return;
         }
 
-        try {
-            Author author = new Author(
-                    0,  // ID will be set by database
-                    nameField.getText().trim(),
-                    Date.valueOf(dobPicker.getValue())
-            );
+        Task<Void> addAuthorTask = new Task<>() {
+            @Override
+            protected Void call() throws BooksDbException {
+                Author author = new Author(
+                        0,  // ID will be set by database
+                        nameField.getText().trim(),
+                        Date.valueOf(dobPicker.getValue())
+                );
+                authorDAO.addAuthor(author);
+                return null;
+            }
+        };
 
-            authorDAO.addAuthor(author);
-            clearFields();
-            loadAuthors();
-            showSuccess("Author added successfully");
+        addAuthorTask.setOnSucceeded(e -> {
+            Platform.runLater(() -> {
+                clearFields();
+                loadAuthors();
+                showSuccess("Author added successfully");
+            });
+        });
 
-        } catch (BooksDbException e) {
-            showError("Error adding author: " + e.getMessage());
-        }
+        addAuthorTask.setOnFailed(e -> {
+            showError("Error adding author: " + addAuthorTask.getException().getMessage());
+        });
+
+        Thread thread = new Thread(addAuthorTask);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     @FXML
@@ -81,19 +98,28 @@ public class AuthorController implements Initializable {
             return;
         }
 
-        try {
-            selectedAuthor.setName(nameField.getText().trim());
-            selectedAuthor.setAuthorDob(Date.valueOf(dobPicker.getValue()));
+        Task<Void> updateAuthorTask = new Task<>() {
+            @Override
+            protected Void call() throws BooksDbException {
+                selectedAuthor.setName(nameField.getText().trim());
+                selectedAuthor.setAuthorDob(Date.valueOf(dobPicker.getValue()));
+                authorDAO.updateAuthor(selectedAuthor);
+                return null;
+            }
+        };
 
-            authorDAO.updateAuthor(selectedAuthor);
+        updateAuthorTask.setOnSucceeded(e -> {
             clearFields();
             loadAuthors();
             showSuccess("Author updated successfully");
             updateButton.setDisable(true);
+        });
 
-        } catch (BooksDbException e) {
-            showError("Error updating author: " + e.getMessage());
-        }
+        updateAuthorTask.setOnFailed(e -> {
+            showError("Error updating author: " + updateAuthorTask.getException().getMessage());
+        });
+
+        new Thread(updateAuthorTask).start();
     }
 
     @FXML
@@ -112,12 +138,22 @@ public class AuthorController implements Initializable {
             return;
         }
 
-        try {
-            List<Author> authors = authorDAO.searchAuthorsByName(searchTerm);
-            authorTableView.getItems().setAll(authors);
-        } catch (BooksDbException e) {
-            showError("Error searching authors: " + e.getMessage());
-        }
+        Task<List<Author>> searchAuthorsTask = new Task<>() {
+            @Override
+            protected List<Author> call() throws BooksDbException {
+                return authorDAO.searchAuthorsByName(searchTerm);
+            }
+        };
+
+        searchAuthorsTask.setOnSucceeded(e -> {
+            authorTableView.getItems().setAll(searchAuthorsTask.getValue());
+        });
+
+        searchAuthorsTask.setOnFailed(e -> {
+            showError("Error searching authors: " + searchAuthorsTask.getException().getMessage());
+        });
+
+        new Thread(searchAuthorsTask).start();
     }
 
     private void setupTableView() {
@@ -138,8 +174,9 @@ public class AuthorController implements Initializable {
     private void setupBooksColumn() {
         TableColumn<Author, String> booksCol = new TableColumn<>("Books");
         booksCol.setCellValueFactory(data -> {
+            Author author = data.getValue();
             try {
-                List<String> bookISBNs = writerDAO.getBooksByAuthor(data.getValue().getAuthorId());
+                List<String> bookISBNs = writerDAO.getBooksByAuthor(author.getAuthorId());
                 List<String> bookTitles = new ArrayList<>();
                 for (String isbn : bookISBNs) {
                     Book book = bookDAO.getBookByISBN(isbn);
@@ -189,11 +226,22 @@ public class AuthorController implements Initializable {
     }
 
     private void loadAuthors() {
-        try {
-            authorTableView.getItems().setAll(authorDAO.getAllAuthors());
-        } catch (BooksDbException e) {
-            showError("Error loading authors: " + e.getMessage());
-        }
+        Task<List<Author>> loadAuthorsTask = new Task<>() {
+            @Override
+            protected List<Author> call() throws BooksDbException {
+                return authorDAO.getAllAuthors();
+            }
+        };
+
+        loadAuthorsTask.setOnSucceeded(e -> {
+            authorTableView.getItems().setAll(loadAuthorsTask.getValue());
+        });
+
+        loadAuthorsTask.setOnFailed(e -> {
+            showError("Error loading authors: " + loadAuthorsTask.getException().getMessage());
+        });
+
+        new Thread(loadAuthorsTask).start();
     }
 
     private void clearFields() {
@@ -215,6 +263,5 @@ public class AuthorController implements Initializable {
         alert.setContentText(message);
         alert.showAndWait();
     }
-
 
 }

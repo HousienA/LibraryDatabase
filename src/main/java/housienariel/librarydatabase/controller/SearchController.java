@@ -2,10 +2,13 @@ package housienariel.librarydatabase.controller;
 
 import housienariel.librarydatabase.model.*;
 import housienariel.librarydatabase.model.dao.*;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class SearchController {
     @FXML private TextField searchField;
@@ -16,6 +19,7 @@ public class SearchController {
 
     private BookDAO bookDAO;
     private GenreDAO genreDAO;
+    private WriterDAO writerDAO;
 
 
     @FXML
@@ -24,102 +28,132 @@ public class SearchController {
         setupRatingFilter();
     }
 
+    public void injectDAOs(BookDAO bookDAO, GenreDAO genreDAO, WriterDAO writerDAO) {
+        this.bookDAO = bookDAO;
+        this.genreDAO = genreDAO;
+        this.writerDAO = writerDAO;
+        setupGenreFilter();
+    }
+
     private void setupTableView() {
-        TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
-        isbnCol.setCellValueFactory(data ->
-                new SimpleStringProperty(data.getValue().getISBN()));
+        // Basic columns
+        setupBasicColumn("ISBN", book -> book.getISBN());
+        setupBasicColumn("Title", book -> book.getTitle());
+        setupBasicColumn("Genre", book -> book.getGenre().getGenreName());
+        setupBasicColumn("Rating", book -> book.getRating() != null ?
+                String.valueOf(book.getRating().getRatingValue()) : "No rating");
 
-        TableColumn<Book, String> titleCol = new TableColumn<>("Title");
-        titleCol.setCellValueFactory(data ->
-                new SimpleStringProperty(data.getValue().getTitle()));
+        // Authors column needs special handling
+        setupAuthorsColumn();
+    }
 
-        TableColumn<Book, String> genreCol = new TableColumn<>("Genre");
-        genreCol.setCellValueFactory(data ->
-                new SimpleStringProperty(data.getValue().getGenre().getGenreName()));
+    private void setupBasicColumn(String name, java.util.function.Function<Book, String> valueExtractor) {
+        TableColumn<Book, String> column = new TableColumn<>(name);
+        column.setCellValueFactory(data -> new SimpleStringProperty(valueExtractor.apply(data.getValue())));
+        searchResultsTable.getColumns().add(column);
+    }
 
-        TableColumn<Book, String> ratingCol = new TableColumn<>("Rating");
-        ratingCol.setCellValueFactory(data -> {
-            Rating rating = data.getValue().getRating();
-            return new SimpleStringProperty(
-                    rating != null ? String.valueOf(rating.getRatingValue()) : "No rating"
-            );
+    private void setupAuthorsColumn() {
+        TableColumn<Book, String> authorsColumn = new TableColumn<>("Authors");
+        authorsColumn.setCellValueFactory(cellData -> {
+            Book book = cellData.getValue();
+            SimpleStringProperty property = new SimpleStringProperty("Loading...");
+
+            if (book != null) {
+                try {
+                    List<Author> authors = writerDAO.getAuthorsForBook(book.getISBN());
+                    String authorNames = authors.stream()
+                            .map(Author::getName)
+                            .reduce((a, b) -> a + ", " + b)
+                            .orElse("No authors");
+                    property.set(authorNames);
+                } catch (BooksDbException e) {
+                    property.set("Error loading authors");
+                }
+            }
+
+            return property;
         });
 
-        TableColumn<Book, String> authorsCol = new TableColumn<>("Authors");
-        authorsCol.setCellValueFactory(data -> {
-            List<Author> authors = data.getValue().getAuthors();
-            String authorNames = authors.stream()
-                    .map(Author::getName)
-                    .reduce((a, b) -> a + ", " + b)
-                    .orElse("No authors");
-            return new SimpleStringProperty(authorNames);
-        });
-
-        searchResultsTable.getColumns().addAll(
-                isbnCol, titleCol, genreCol, ratingCol, authorsCol
-        );
+        searchResultsTable.getColumns().add(authorsColumn);
     }
 
     private void setupRatingFilter() {
         ratingFilterBox.getItems().addAll(1, 2, 3, 4, 5);
         ratingFilterBox.setPromptText("Select Rating");
-
-        ratingFilterBox.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                handleRatingSearch();
-            }
+        ratingFilterBox.valueProperty().addListener((obs, old, val) -> {
+            if (val != null) handleRatingSearch();
         });
     }
 
     private void setupGenreFilter() {
-        try {
-            genreComboBox.getItems().addAll(genreDAO.getAllGenres());
+        Task<List<Genre>> genreLoadTask = new Task<>() {
+            @Override
+            protected List<Genre> call() throws BooksDbException {
+                return genreDAO.getAllGenres();
+            }
+        };
+
+        genreLoadTask.setOnSucceeded(e -> Platform.runLater(() -> {
+            genreComboBox.getItems().addAll(genreLoadTask.getValue());
             genreComboBox.setPromptText("Select Genre");
 
-            // Add this code to display genre names properly
-            genreComboBox.setCellFactory(listView -> new ListCell<Genre>() {
+            // Set up display
+            ListCell<Genre> cell = new ListCell<>() {
                 @Override
                 protected void updateItem(Genre genre, boolean empty) {
                     super.updateItem(genre, empty);
-                    if (empty || genre == null) {
-                        setText(null);
-                    } else {
-                        setText(genre.getGenreName());
-                    }
+                    setText(empty || genre == null ? null : genre.getGenreName());
+                }
+            };
+
+            genreComboBox.setCellFactory(view -> new ListCell<Genre>() {
+                @Override
+                protected void updateItem(Genre genre, boolean empty) {
+                    super.updateItem(genre, empty);
+                    setText(empty || genre == null ? null : genre.getGenreName());
                 }
             });
-
             genreComboBox.setButtonCell(new ListCell<Genre>() {
                 @Override
                 protected void updateItem(Genre genre, boolean empty) {
                     super.updateItem(genre, empty);
-                    if (empty || genre == null) {
-                        setText(null);
-                    } else {
-                        setText(genre.getGenreName());
-                    }
+                    setText(empty || genre == null ? null : genre.getGenreName());
                 }
             });
-        } catch (BooksDbException e) {
-            showError("Error loading genres: " + e.getMessage());
-        }
+
+            genreComboBox.valueProperty().addListener((obs, old, val) -> {
+                if (val != null) handleGenreSearch();
+            });
+        }));
+
+        new Thread(genreLoadTask).start();
     }
 
+    private void performSearch(Supplier<Task<List<Book>>> taskSupplier) {
+        Task<List<Book>> task = taskSupplier.get();
+
+        task.setOnSucceeded(e -> Platform.runLater(() -> {
+            List<Book> results = task.getValue();
+            searchResultsTable.getItems().setAll(results);
+            resultCountLabel.setText("Results: " + results.size());
+        }));
+
+        task.setOnFailed(e -> Platform.runLater(() ->
+                showError("Search error: " + task.getException().getMessage())));
+
+        new Thread(task).start();
+    }
 
     @FXML
     private void handleSearch() {
         String searchTerm = searchField.getText().trim();
-        if (searchTerm.isEmpty()) {
-            showError("Please enter a search term");
-            return;
-        }
-
-        try {
-            List<Book> results = bookDAO.searchBooks(searchTerm);
-            updateSearchResults(results);
-        } catch (BooksDbException e) {
-            showError("Error performing search: " + e.getMessage());
-        }
+        performSearch(() -> new Task<>() {
+            @Override
+            protected List<Book> call() throws BooksDbException {
+                return bookDAO.searchBooks(searchTerm);
+            }
+        });
     }
 
     @FXML
@@ -129,27 +163,36 @@ public class SearchController {
             return;
         }
 
-        try {
-            List<Book> results = bookDAO.searchBooksByRating(rating);
+        Task<List<Book>> ratingSearchTask = new Task<>() {
+            @Override
+            protected List<Book> call() throws BooksDbException {
+                return bookDAO.searchBooksByRating(rating);
+            }
+        };
+
+        ratingSearchTask.setOnSucceeded(e -> {
+            List<Book> results = ratingSearchTask.getValue();
             updateSearchResults(results);
-        } catch (BooksDbException e) {
-            showError("Error searching by rating: " + e.getMessage());
-        }
+        });
+
+        ratingSearchTask.setOnFailed(e -> {
+            showError("Error searching by rating: " + ratingSearchTask.getException().getMessage());
+        });
+
+        new Thread(ratingSearchTask).start();
     }
 
     @FXML
     private void handleGenreSearch() {
         Genre selectedGenre = genreComboBox.getValue();
-        if (selectedGenre == null) {
-            return;
-        }
+        if (selectedGenre == null) return;
 
-        try {
-            List<Book> results = bookDAO.searchBooks(selectedGenre.getGenreName());
-            updateSearchResults(results);
-        } catch (BooksDbException e) {
-            showError("Error searching by genre: " + e.getMessage());
-        }
+        performSearch(() -> new Task<>() {
+            @Override
+            protected List<Book> call() throws BooksDbException {
+                return bookDAO.searchBooks(selectedGenre.getGenreName());
+            }
+        });
     }
 
     @FXML
@@ -157,6 +200,7 @@ public class SearchController {
         searchField.clear();
         ratingFilterBox.setValue(null);
         searchResultsTable.getItems().clear();
+        genreComboBox.setValue(null);
         resultCountLabel.setText("Results: 0");
     }
 
@@ -170,11 +214,5 @@ public class SearchController {
         alert.setTitle("Error");
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    public void injectDAOs(BookDAO bookDAO, GenreDAO genreDAO) {
-        this.bookDAO = bookDAO;
-        this.genreDAO = genreDAO;
-        setupGenreFilter();
     }
 }

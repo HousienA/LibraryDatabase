@@ -17,7 +17,6 @@ public class Book {
         this.authors = new ArrayList<>();
     }
 
-    // Existing getters and setters
     public String getISBN() {
         return ISBN;
     }
@@ -42,7 +41,6 @@ public class Book {
         this.genre = genre;
     }
 
-    // New getters and setters for Rating and Authors
     public Rating getRating() {
         return rating;
     }
@@ -66,11 +64,6 @@ public class Book {
         }
     }
 
-    public void removeAuthor(Author author) {
-        authors.remove(author);
-    }
-
-    // Override toString() for better debugging and display
     @Override
     public String toString() {
         return "Book{" +

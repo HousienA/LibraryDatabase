@@ -65,17 +65,32 @@ public class WriterQuery implements WriterDAO {
         }
     }
 
-    //remove author from book
     @Override
-    public void removeAuthorFromBook(String bookISBN, int authorId) throws BooksDbException {
-        String query = "DELETE FROM Writer WHERE book_ISBN = ? AND author_id = ?";
+    public List<Author> getAuthorsForBook(String isbn) throws BooksDbException {
+        List<Author> authors = new ArrayList<>();
+        String query = """
+        SELECT a.* 
+        FROM Author a 
+        JOIN Writer w ON a.author_id = w.author_id 
+        WHERE w.book_ISBN = ?
+        """;
+
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, bookISBN);
-            stmt.setInt(2, authorId);
-            stmt.executeUpdate();
+            stmt.setString(1, isbn);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Author author = new Author(
+                            rs.getInt("author_id"),
+                            rs.getString("name"),
+                            rs.getDate("author_dob")
+                    );
+                    authors.add(author);
+                }
+            }
         } catch (SQLException e) {
-            throw new BooksDbException("Error removing author from book", e);
+            throw new BooksDbException("Error getting authors for book", e);
         }
+        return authors;
     }
 
     // get all books by author

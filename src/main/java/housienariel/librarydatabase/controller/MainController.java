@@ -2,6 +2,7 @@ package housienariel.librarydatabase.controller;
 
 import housienariel.librarydatabase.model.dao.*;
 import housienariel.librarydatabase.model.queries.*;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.application.Platform;
@@ -24,29 +25,33 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        try {
-            initializeDAOs();
-            // Use Platform.runLater to ensure child controllers are initialized
+        Task<Void> initializeTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                initializeDAOs();
+                return null;
+            }
+        };
+
+        initializeTask.setOnSucceeded(e -> {
             Platform.runLater(() -> {
                 try {
                     initializeControllers();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Initialization Error");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Error initializing controllers: " + e.getMessage());
-                    alert.showAndWait();
+                } catch (Exception ex) {
+                    showError("Error initializing controllers: " + ex.getMessage());
                 }
             });
-        } catch (Exception e) {
-            e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Initialization Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Error initializing DAOs: " + e.getMessage());
-            alert.showAndWait();
-        }
+        });
+
+        initializeTask.setOnFailed(e -> {
+            Platform.runLater(() -> {
+                showError("Error initializing DAOs: " + initializeTask.getException().getMessage());
+            });
+        });
+
+        Thread thread = new Thread(initializeTask);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void initializeDAOs() throws Exception {
@@ -59,16 +64,26 @@ public class MainController implements Initializable {
 
     private void initializeControllers() {
         if (bookViewController != null) {
-            bookViewController.injectDAOs(bookDAO, genreDAO, ratingDAO, writerDAO);
+            bookViewController.injectDAOs(bookDAO, genreDAO, ratingDAO, writerDAO, authorDAO);
         }
         if (authorViewController != null) {
             authorViewController.injectDAOs(authorDAO, writerDAO, bookDAO);
         }
         if (searchViewController != null) {
-            searchViewController.injectDAOs(bookDAO, genreDAO);
+            searchViewController.injectDAOs(bookDAO, genreDAO, writerDAO);
         }
         if (genreViewController != null) {
             genreViewController.injectDAOs(genreDAO);
         }
+    }
+
+    private void showError(String message) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Initialization Error");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 }
