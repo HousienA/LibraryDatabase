@@ -27,6 +27,11 @@ public class GenreController implements Initializable {
         setupTableView();
     }
 
+    public void injectDAOs(GenreDAO genreDAO) {
+        this.genreDAO = genreDAO;
+        loadGenres();
+    }
+
     @FXML
     private void handleAddGenre() {
         String genreName = genreNameField.getText().trim();
@@ -39,14 +44,14 @@ public class GenreController implements Initializable {
         Task<Void> addGenreTask = new Task<>() {
             @Override
             protected Void call() throws BooksDbException {
-                Genre newGenre = new Genre(0, genreName); // ID will be set by database
+                Genre newGenre = new Genre(0, genreName);
                 genreDAO.addGenre(newGenre);
                 return null;
             }
         };
 
         addGenreTask.setOnSucceeded(e -> {
-            Platform.runLater(() -> {  // Add this
+            Platform.runLater(() -> {
                 clearFields();
                 loadGenres();
                 showSuccess();
@@ -54,13 +59,13 @@ public class GenreController implements Initializable {
         });
 
         addGenreTask.setOnFailed(e -> {
-            Platform.runLater(() -> {  // Add this
+            Platform.runLater(() -> {
                 showError("Error adding genre: " + addGenreTask.getException().getMessage());
             });
         });
 
         Thread thread = new Thread(addGenreTask);
-        thread.setDaemon(true);  // Add this
+        thread.setDaemon(true);
         thread.start();
     }
 
@@ -113,8 +118,4 @@ public class GenreController implements Initializable {
         alert.showAndWait();
     }
 
-    public void injectDAOs(GenreDAO genreDAO) {
-        this.genreDAO = genreDAO;
-        loadGenres();
-    }
 }

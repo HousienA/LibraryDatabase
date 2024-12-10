@@ -12,16 +12,15 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class MainController implements Initializable {
-    @FXML private BookController bookViewController;      // Changed from bookViewController
-    @FXML private AuthorController authorViewController;  // Changed from authorViewController
-    @FXML private SearchController searchViewController;  // Changed from searchViewController
-    @FXML private GenreController genreViewController;    // Changed from genreViewController
+    @FXML private BookController bookViewController;
+    @FXML private AuthorController authorViewController;
+    @FXML private SearchController searchViewController;
+    @FXML private GenreController genreViewController;
 
     private BookDAO bookDAO;
     private AuthorDAO authorDAO;
     private GenreDAO genreDAO;
     private WriterDAO writerDAO;
-    private RatingDAO ratingDAO;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -59,12 +58,11 @@ public class MainController implements Initializable {
         authorDAO = new AuthorQuery();
         genreDAO = new GenreQuery();
         writerDAO = new WriterQuery();
-        ratingDAO = new RatingQuery();
     }
 
     private void initializeControllers() {
         if (bookViewController != null) {
-            bookViewController.injectDAOs(bookDAO, genreDAO, ratingDAO, writerDAO, authorDAO);
+            bookViewController.injectDAOs(bookDAO, genreDAO, writerDAO, authorDAO);
         }
         if (authorViewController != null) {
             authorViewController.injectDAOs(authorDAO, writerDAO, bookDAO);

@@ -5,7 +5,6 @@ import housienariel.librarydatabase.model.dao.*;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -26,7 +25,6 @@ public class BookController implements Initializable {
 
     private BookDAO bookDAO;
     private GenreDAO genreDAO;
-    private RatingDAO ratingDAO;
     private WriterDAO writerDAO;
     private AuthorDAO authorDAO;
     private List<Author> selectedAuthors = new ArrayList<>();
@@ -40,11 +38,9 @@ public class BookController implements Initializable {
         setupSelectionListener();
     }
 
-    public void injectDAOs(BookDAO bookDAO, GenreDAO genreDAO, RatingDAO ratingDAO, WriterDAO writerDAO
-            , AuthorDAO authorDAO) {
+    public void injectDAOs(BookDAO bookDAO, GenreDAO genreDAO, WriterDAO writerDAO, AuthorDAO authorDAO) {
         this.bookDAO = bookDAO;
         this.genreDAO = genreDAO;
-        this.ratingDAO = ratingDAO;
         this.writerDAO = writerDAO;
         this.authorDAO = authorDAO;
         setupGenreComboBox();
@@ -141,28 +137,23 @@ public class BookController implements Initializable {
         Task<Void> addBookTask = new Task<>() {
             @Override
             protected Void call() throws BooksDbException {
-                // Validate input
                 if (!validateInput()) {
                     return null;
                 }
 
-                // Create book object
                 Book book = new Book(
                         isbnField.getText(),
                         titleField.getText(),
                         genreComboBox.getValue()
                 );
 
-                // Add rating if selected
                 if (ratingComboBox.getValue() != null) {
                     Rating rating = new Rating(0, ratingComboBox.getValue());
                     book.setRating(rating);
                 }
 
-                // Add book to database
                 bookDAO.addBook(book);
 
-                // Add selected authors to book
                 if (!selectedAuthors.isEmpty()) {
                     for (Author author : selectedAuthors) {
                         writerDAO.addAuthorToBook(book.getISBN(), author);
@@ -249,7 +240,6 @@ public class BookController implements Initializable {
         bookTableView.getSelectionModel().clearSelection();
         selectedAuthors.clear();
         selectedAuthorsListView.getItems().clear();
-
         showSuccess("Fields cleared");
     }
 
@@ -289,10 +279,6 @@ public class BookController implements Initializable {
     @FXML
     private void handleAuthorSearch() {
         String searchTerm = authorSearchField.getText().trim();
-        if (searchTerm.isEmpty()) {
-            return;
-        }
-
         Task<List<Author>> searchAuthorTask = new Task<>() {
             @Override
             protected List<Author> call() throws BooksDbException {
@@ -306,8 +292,7 @@ public class BookController implements Initializable {
                 showError("No authors found with that name");
                 return;
             }
-
-            // Create dialog for selection
+            // Create a popup to select authors
             Dialog<List<Author>> dialog = new Dialog<>();
             dialog.setTitle("Select Authors");
             dialog.setHeaderText("Select one or more authors from the results");
@@ -316,7 +301,7 @@ public class BookController implements Initializable {
             authorListView.getItems().addAll(authors);
             authorListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-            // Call the setupSelectedAuthorsListView method to set up the ListView
+            // set list for the search authors
             setupSelectedAuthorsListView(authorListView);
 
             dialog.getDialogPane().setContent(authorListView);

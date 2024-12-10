@@ -36,14 +36,13 @@ public class SearchController {
     }
 
     private void setupTableView() {
-        // Basic columns
         setupBasicColumn("ISBN", book -> book.getISBN());
         setupBasicColumn("Title", book -> book.getTitle());
         setupBasicColumn("Genre", book -> book.getGenre().getGenreName());
         setupBasicColumn("Rating", book -> book.getRating() != null ?
                 String.valueOf(book.getRating().getRatingValue()) : "No rating");
 
-        // Authors column needs special handling
+        // special handling for authors column
         setupAuthorsColumn();
     }
 
@@ -54,29 +53,34 @@ public class SearchController {
     }
 
     private void setupAuthorsColumn() {
-        TableColumn<Book, String> authorsColumn = new TableColumn<>("Authors");
-        authorsColumn.setCellValueFactory(cellData -> {
-            Book book = cellData.getValue();
-            SimpleStringProperty property = new SimpleStringProperty("Loading...");
+    TableColumn<Book, String> authorsColumn = new TableColumn<>("Authors");
+    authorsColumn.setCellValueFactory(cellData -> {
+        Book book = cellData.getValue();
+        SimpleStringProperty property = new SimpleStringProperty("Loading...");
 
-            if (book != null) {
-                try {
+        if (book != null) {
+            Task<String> loadAuthorsTask = new Task<>() {
+                @Override
+                protected String call() throws BooksDbException {
                     List<Author> authors = writerDAO.getAuthorsForBook(book.getISBN());
-                    String authorNames = authors.stream()
+                    return authors.stream()
                             .map(Author::getName)
                             .reduce((a, b) -> a + ", " + b)
                             .orElse("No authors");
-                    property.set(authorNames);
-                } catch (BooksDbException e) {
-                    property.set("Error loading authors");
                 }
-            }
+            };
 
-            return property;
-        });
+            loadAuthorsTask.setOnSucceeded(e -> Platform.runLater(() -> property.set(loadAuthorsTask.getValue())));
+            loadAuthorsTask.setOnFailed(e -> Platform.runLater(() -> property.set("Error loading authors")));
 
-        searchResultsTable.getColumns().add(authorsColumn);
-    }
+            new Thread(loadAuthorsTask).start();
+        }
+
+        return property;
+    });
+
+    searchResultsTable.getColumns().add(authorsColumn);
+}
 
     private void setupRatingFilter() {
         ratingFilterBox.getItems().addAll(1, 2, 3, 4, 5);

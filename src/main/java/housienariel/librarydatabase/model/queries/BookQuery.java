@@ -24,15 +24,8 @@ public class BookQuery implements BookDAO {
                 pstmt.setString(1, book.getISBN());
                 pstmt.setString(2, book.getTitle());
                 pstmt.setInt(3, book.getGenre().getGenreId());
-
-                System.out.println("Executing insert with values:");
-                System.out.println("ISBN: " + book.getISBN());
-                System.out.println("Title: " + book.getTitle());
-                System.out.println("Genre ID: " + book.getGenre().getGenreId());
-
                 pstmt.executeUpdate();
 
-                // Add rating if present
                 if (book.getRating() != null) {
                     System.out.println("Adding rating: " + book.getRating().getRatingValue());
                     addRatingToBook(book.getISBN(), book.getRating());
@@ -259,7 +252,9 @@ public class BookQuery implements BookDAO {
         return books;
     }
 
-    // Helper method to create a Book object from ResultSet
+
+    // Helper methods for implementation
+
     private Book createBookFromResultSet(ResultSet rs) throws SQLException {
         Book book = new Book(
                 rs.getString("ISBN"),
@@ -274,11 +269,8 @@ public class BookQuery implements BookDAO {
                     rs.getInt("rating_value")
             ));
         }
-
         return book;
     }
-
-    // Helper methods for implementation
 
     private void loadAuthorsForBook(Book book) throws SQLException {
         String authorQuery = """
@@ -303,7 +295,6 @@ public class BookQuery implements BookDAO {
         }
     }
 
-
     private void addAuthorsToBook(Book book) throws SQLException {
         String writerQuery = "INSERT INTO Writer (book_ISBN, author_id) VALUES (?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(writerQuery)) {
@@ -315,18 +306,4 @@ public class BookQuery implements BookDAO {
         }
     }
 
-
-    private void updateAuthorsForBook(Book book) throws SQLException {
-        // First remove all existing authors
-        String deleteQuery = "DELETE FROM Writer WHERE book_ISBN = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(deleteQuery)) {
-            stmt.setString(1, book.getISBN());
-            stmt.executeUpdate();
-        }
-
-        // Then add the current authors
-        if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
-            addAuthorsToBook(book);
-        }
-    }
 }

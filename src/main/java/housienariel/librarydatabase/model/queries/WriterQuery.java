@@ -4,9 +4,6 @@ import housienariel.librarydatabase.connection.DatabaseConnection;
 import housienariel.librarydatabase.model.Author;
 import housienariel.librarydatabase.model.BooksDbException;
 import housienariel.librarydatabase.model.dao.WriterDAO;
-import housienariel.librarydatabase.model.dao.AuthorDAO;
-import housienariel.librarydatabase.model.queries.AuthorQuery;
-
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -26,21 +23,16 @@ public class WriterQuery implements WriterDAO {
         try {
             connection.setAutoCommit(false);
 
-            // Ensure the author exists
             String findAuthorIdQuery = "SELECT author_id FROM Author WHERE name = ?";
             try (PreparedStatement findStmt = connection.prepareStatement(findAuthorIdQuery)) {
                 findStmt.setString(1, author.getName());
                 try (ResultSet rs = findStmt.executeQuery()) {
                     if (rs.next()) {
                         author.setAuthorId(rs.getInt("author_id"));
-                    } else{
-                        authorQuery.addAuthor(author); //if author does not exist, add author
-
                     }
                 }
             }
 
-            // Insert into the Writer table
             String writerQuery = "INSERT INTO Writer (book_ISBN, author_id) VALUES (?, ?)";
             try (PreparedStatement writerStmt = connection.prepareStatement(writerQuery)) {
                 writerStmt.setString(1, bookISBN);
@@ -93,7 +85,6 @@ public class WriterQuery implements WriterDAO {
         return authors;
     }
 
-    // get all books by author
     @Override
     public List<String> getBooksByAuthor(int authorId) throws BooksDbException {
         List<String> bookISBNs = new ArrayList<>();

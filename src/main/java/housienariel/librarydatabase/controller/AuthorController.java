@@ -11,13 +11,10 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.beans.property.SimpleStringProperty;
 
 import java.net.URL;
-import java.time.LocalDate;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-
-// TODO: Threading to setupBooksColumn
 
 public class AuthorController implements Initializable {
     @FXML private TextField nameField;
@@ -36,7 +33,6 @@ public class AuthorController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Only do setup that doesn't require DAOs
         setupTableView();
         setupSelectionListener();
         updateButton.setDisable(true);
@@ -46,7 +42,6 @@ public class AuthorController implements Initializable {
         this.authorDAO = authorDAO;
         this.writerDAO = writerDAO;
         this.bookDAO = bookDAO;
-
         setupBooksColumn();
         loadAuthors();
     }
@@ -60,10 +55,7 @@ public class AuthorController implements Initializable {
         Task<Void> addAuthorTask = new Task<>() {
             @Override
             protected Void call() throws BooksDbException {
-                Author author = new Author(
-                        0,  // ID will be set by database
-                        nameField.getText().trim(),
-                        Date.valueOf(dobPicker.getValue())
+                Author author = new Author(0, nameField.getText().trim(), Date.valueOf(dobPicker.getValue())
                 );
                 authorDAO.addAuthor(author);
                 return null;
@@ -165,12 +157,12 @@ public class AuthorController implements Initializable {
 
         TableColumn<Author, Date> dobCol = new TableColumn<>("Date of Birth");
         dobCol.setCellValueFactory(new PropertyValueFactory<>("authorDob"));
-
-        // Book column will be added after DAOs are injected
         authorTableView.getColumns().addAll(idCol, nameCol, dobCol);
+
+        // Book column initialized in injectDAOs
     }
 
-    // Add this new method to set up the books column after DAOs are available
+    // to create a new column for books of authors
     private void setupBooksColumn() {
         TableColumn<Author, String> booksCol = new TableColumn<>("Books");
         booksCol.setCellValueFactory(data -> {
@@ -193,22 +185,19 @@ public class AuthorController implements Initializable {
         authorTableView.getColumns().add(booksCol);
     }
 
+    //Fill in the selected author's details in the text fields
     private void setupSelectionListener() {
         authorTableView.getSelectionModel().selectedItemProperty().addListener(
                 (obs, oldSelection, newSelection) -> {
                     if (newSelection != null) {
                         selectedAuthor = newSelection;
-                        populateFields(newSelection);
+                        nameField.setText(newSelection.getName());
+                        dobPicker.setValue(newSelection.getAuthorDob().toLocalDate());
                         updateButton.setDisable(false);
                         addButton.setDisable(true);
                     }
                 }
         );
-    }
-
-    private void populateFields(Author author) {
-        nameField.setText(author.getName());
-        dobPicker.setValue(author.getAuthorDob().toLocalDate());
     }
 
     private boolean validateInput() {
