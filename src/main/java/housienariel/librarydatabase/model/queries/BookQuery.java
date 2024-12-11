@@ -15,6 +15,13 @@ public class BookQuery implements BookDAO {
         this.connection = DatabaseConnection.getConnection();
     }
 
+    /**
+     * Add a book to the database with rating and genre
+     *
+     * @param book The book to add.
+     * @throws BooksDbException If an error occurs while adding the book.
+     */
+
     @Override
     public void addBook(Book book) throws BooksDbException {
         String query = "INSERT INTO Book (ISBN, title, genre_id) VALUES (?, ?, ?)";
@@ -43,54 +50,98 @@ public class BookQuery implements BookDAO {
         }
     }
 
+
+    /**
+     * Get a book by its ISBN
+     * @param ISBN The ISBN of the book to retrieve.
+     * @return The book with the inserted ISBN, or null if not found.
+     * @throws BooksDbException If an error occurs while retrieving the book.
+     */
     @Override
     public Book getBookByISBN(String ISBN) throws BooksDbException {
         String query = """
-            SELECT b.*, g.genre_name, r.rating_value, r.rating_id
-            FROM Book b
-            LEFT JOIN Genre g ON b.genre_id = g.genre_id
-            LEFT JOIN Rating r ON b.rating_id = r.rating_id
-            WHERE b.ISBN = ?
-            """;
+                SELECT b.*, g.genre_name, r.rating_value, r.rating_id
+                FROM Book b
+                LEFT JOIN Genre g ON b.genre_id = g.genre_id
+                LEFT JOIN Rating r ON b.rating_id = r.rating_id
+                WHERE b.ISBN = ?
+                """;
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, ISBN);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    Book book = createBookFromResultSet(rs);
-                    loadAuthorsForBook(book);
-                    return book;
+        try {
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, ISBN);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        Book book = createBookFromResultSet(rs);
+                        loadAuthorsForBook(book);
+                        connection.commit();
+                        return book;
+                    }
                 }
+            } catch (SQLException e) {
+                connection.rollback();
+                throw new BooksDbException("Error retrieving book by ISBN", e);
             }
         } catch (SQLException e) {
-            throw new BooksDbException("Error retrieving book by ISBN", e);
+            throw new BooksDbException("Transaction error", e);
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new BooksDbException("Error restoring auto-commit mode", e);
+            }
         }
         return null;
     }
 
+
+    /**
+     * @return A list of all books in the database.
+     * @throws BooksDbException If an error occurs while retrieving the books.
+     */
     @Override
     public List<Book> getAllBooks() throws BooksDbException {
         List<Book> books = new ArrayList<>();
         String query = """
-            SELECT b.*, g.genre_name, r.rating_value, r.rating_id
-            FROM Book b
-            LEFT JOIN Genre g ON b.genre_id = g.genre_id
-            LEFT JOIN Rating r ON b.rating_id = r.rating_id
-            """;
+                SELECT b.*, g.genre_name, r.rating_value, r.rating_id
+                FROM Book b
+                LEFT JOIN Genre g ON b.genre_id = g.genre_id
+                LEFT JOIN Rating r ON b.rating_id = r.rating_id
+                """;
 
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
-            while (rs.next()) {
-                Book book = createBookFromResultSet(rs);
-                loadAuthorsForBook(book);
-                books.add(book);
+        try {
+            connection.setAutoCommit(false);
+            try (Statement stmt = connection.createStatement();
+                 ResultSet rs = stmt.executeQuery(query)) {
+                while (rs.next()) {
+                    Book book = createBookFromResultSet(rs);
+                    loadAuthorsForBook(book);
+                    books.add(book);
+                }
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw new BooksDbException("Error retrieving all books", e);
             }
         } catch (SQLException e) {
-            throw new BooksDbException("Error retrieving all books", e);
+            throw new BooksDbException("Transaction error", e);
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new BooksDbException("Error restoring auto-commit mode", e);
+            }
         }
         return books;
     }
 
+
+    /**
+     * @param book The selected book to update.
+     * @throws BooksDbException If an error occurs while updating the book.
+     */
     @Override
     public void updateBook(Book book) throws BooksDbException {
         String query = "UPDATE Book SET title = ?, genre_id = ? WHERE ISBN = ?";
@@ -108,7 +159,6 @@ public class BookQuery implements BookDAO {
                 pstmt.setString(3, book.getISBN());
 
                 int rowsAffected = pstmt.executeUpdate();
-                System.out.println("Rows affected: " + rowsAffected);
 
                 if (rowsAffected == 0) {
                     throw new BooksDbException("No book found with ISBN: " + book.getISBN());
@@ -128,26 +178,25 @@ public class BookQuery implements BookDAO {
         } catch (SQLException e) {
             System.out.println("Transaction Error: " + e.getMessage());
             throw new BooksDbException("Error in database transaction", e);
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new BooksDbException("Error restoring auto-commit mode", e);
+            }
         }
     }
 
-    @Override
-    public void deleteBook(String ISBN) throws BooksDbException {
-        String query = "DELETE FROM Book WHERE ISBN = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setString(1, ISBN);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new BooksDbException("Error deleting book", e);
-        }
-    }
 
+    /**
+     * @param bookISBN The ISBN of the book to add the rating to.
+     * @param rating The rating to add.
+     * @throws BooksDbException If an error occurs while adding the rating.
+     */
     @Override
     public void addRatingToBook(String bookISBN, Rating rating) throws BooksDbException {
         try {
             connection.setAutoCommit(false);
-
-            // Add the rating first
             String ratingQuery = "INSERT INTO Rating (rating_value) VALUES (?)";
             int ratingId;
             try (PreparedStatement ratingStmt = connection.prepareStatement(ratingQuery, Statement.RETURN_GENERATED_KEYS)) {
@@ -164,7 +213,6 @@ public class BookQuery implements BookDAO {
                 }
             }
 
-            // Update the book with the rating_id
             String updateBookQuery = "UPDATE Book SET rating_id = ? WHERE ISBN = ?";
             try (PreparedStatement updateStmt = connection.prepareStatement(updateBookQuery)) {
                 updateStmt.setInt(1, rating.getRatingId());
@@ -186,54 +234,80 @@ public class BookQuery implements BookDAO {
         }
     }
 
+    /**
+     * Search for books by title, ISBN, author name, or genre name.
+     * @param searchTerm term to match with any titles, ISBNs, author names and genre names.
+     * @return A list of books matching the search.
+     * @throws BooksDbException If an error occurs while searching for books.
+     */
     @Override
     public List<Book> searchBooks(String searchTerm) throws BooksDbException {
         List<Book> books = new ArrayList<>();
         String query = """
-        SELECT DISTINCT b.*, g.genre_name, r.rating_value, r.rating_id
-        FROM Book b
-        LEFT JOIN Genre g ON b.genre_id = g.genre_id
-        LEFT JOIN Rating r ON b.rating_id = r.rating_id
-        LEFT JOIN Writer w ON b.ISBN = w.book_ISBN
-        LEFT JOIN Author a ON w.author_id = a.author_id
-        WHERE b.title LIKE ? 
-        OR b.ISBN LIKE ?
-        OR a.name LIKE ?
-        OR g.genre_name LIKE ?
-        """;
+                SELECT DISTINCT b.*, g.genre_name, r.rating_value, r.rating_id
+                FROM Book b
+                LEFT JOIN Genre g ON b.genre_id = g.genre_id
+                LEFT JOIN Rating r ON b.rating_id = r.rating_id
+                LEFT JOIN Writer w ON b.ISBN = w.book_ISBN
+                LEFT JOIN Author a ON w.author_id = a.author_id
+                WHERE b.title LIKE ?
+                OR b.ISBN LIKE ?
+                OR a.name LIKE ?
+                OR g.genre_name LIKE ?
+                """;
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            String pattern = "%" + searchTerm + "%";
-            // Set the same search pattern for all fields
-            stmt.setString(1, pattern);  // title
-            stmt.setString(2, pattern);  // ISBN
-            stmt.setString(3, pattern);  // author name
-            stmt.setString(4, pattern);  // genre name
+        try {
+            connection.setAutoCommit(false); // Start transaction
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Book book = createBookFromResultSet(rs);
-                    loadAuthorsForBook(book);
-                    books.add(book);
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                String pattern = "%" + searchTerm + "%";
+                stmt.setString(1, pattern);  // title
+                stmt.setString(2, pattern);  // ISBN
+                stmt.setString(3, pattern);  // author name
+                stmt.setString(4, pattern);  // genre name
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        Book book = createBookFromResultSet(rs);
+                        loadAuthorsForBook(book);
+                        books.add(book);
+                    }
                 }
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw new BooksDbException("Error searching for books", e);
             }
         } catch (SQLException e) {
-            throw new BooksDbException("Error searching for books", e);
+            throw new BooksDbException("Transaction error", e);
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new BooksDbException("Error restoring auto-commit mode", e);
+            }
         }
 
         return books;
     }
 
+
+    /**
+     * Search for books by rating.
+     * @param rating The rating to search for.
+     * @return A list of books with the specified rating.
+     * @throws BooksDbException If an error occurs while searching for books.
+     */
     @Override
     public List<Book> searchBooksByRating(int rating) throws BooksDbException {
         List<Book> books = new ArrayList<>();
         String query = """
-        SELECT DISTINCT b.*, g.genre_name, r.rating_value, r.rating_id
-        FROM Book b
-        LEFT JOIN Genre g ON b.genre_id = g.genre_id
-        LEFT JOIN Rating r ON b.rating_id = r.rating_id
-        WHERE r.rating_value = ?
-        """;
+                SELECT DISTINCT b.*, g.genre_name, r.rating_value, r.rating_id
+                FROM Book b
+                LEFT JOIN Genre g ON b.genre_id = g.genre_id
+                LEFT JOIN Rating r ON b.rating_id = r.rating_id
+                WHERE r.rating_value = ?
+                """;
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, rating);
@@ -255,6 +329,12 @@ public class BookQuery implements BookDAO {
 
     // Helper methods for implementation
 
+    /**
+     * Create a book object from a ResultSet.
+     * @param rs The ResultSet to create the book from.
+     * @return The book created from the ResultSet.
+     * @throws SQLException If an error occurs while creating the book.
+     */
     private Book createBookFromResultSet(ResultSet rs) throws SQLException {
         Book book = new Book(
                 rs.getString("ISBN"),
@@ -272,13 +352,17 @@ public class BookQuery implements BookDAO {
         return book;
     }
 
+    /**
+     * @param book The book to load authors for.
+     * @throws SQLException If an error occurs while loading authors.
+     */
     private void loadAuthorsForBook(Book book) throws SQLException {
         String authorQuery = """
-            SELECT a.*
-            FROM Author a
-            JOIN Writer w ON a.author_id = w.author_id
-            WHERE w.book_ISBN = ?
-            """;
+                SELECT a.*
+                FROM Author a
+                JOIN Writer w ON a.author_id = w.author_id
+                WHERE w.book_ISBN = ?
+                """;
 
         try (PreparedStatement stmt = connection.prepareStatement(authorQuery)) {
             stmt.setString(1, book.getISBN());
@@ -291,17 +375,6 @@ public class BookQuery implements BookDAO {
                     );
                     book.addAuthor(author);
                 }
-            }
-        }
-    }
-
-    private void addAuthorsToBook(Book book) throws SQLException {
-        String writerQuery = "INSERT INTO Writer (book_ISBN, author_id) VALUES (?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(writerQuery)) {
-            for (Author author : book.getAuthors()) {
-                stmt.setString(1, book.getISBN());
-                stmt.setInt(2, author.getAuthorId());
-                stmt.executeUpdate();
             }
         }
     }

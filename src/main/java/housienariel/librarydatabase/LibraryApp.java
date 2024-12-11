@@ -23,7 +23,7 @@ public class LibraryApp extends Application {
             Scene scene = new Scene(loader.load(), 800, 600);
             primaryStage.setTitle("Library Management System");
 
-            // Add this close handler
+
             primaryStage.setOnCloseRequest(event -> {
                 DatabaseConnection.closeConnection();
             });

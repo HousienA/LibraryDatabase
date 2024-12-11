@@ -10,18 +10,40 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GenreQuery implements GenreDAO {
+
+    /**
+     * @param genre the genre to add
+     * @throws BooksDbException if an error occurs while adding the genre
+     */
     @Override
     public void addGenre(Genre genre) throws BooksDbException {
         String query = "INSERT INTO Genre (genre_name) VALUES (?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, genre.getGenreName());
-            stmt.executeUpdate();
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, genre.getGenreName());
+                stmt.executeUpdate();
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw new BooksDbException("Error adding genre", e);
+            }
         } catch (SQLException e) {
-            throw new BooksDbException("Error adding genre", e);
+            throw new BooksDbException("Transaction error", e);
+        } finally {
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new BooksDbException("Error restoring auto-commit mode", e);
+            }
         }
     }
 
+    /**
+     * @return a list of all genres
+     * @throws BooksDbException if an error occurs while retrieving genres
+     */
     @Override
     public List<Genre> getAllGenres() throws BooksDbException {
         List<Genre> genres = new ArrayList<>();
@@ -39,15 +61,4 @@ public class GenreQuery implements GenreDAO {
         return genres;
     }
 
-    @Override
-    public void deleteGenre(int genreId) throws BooksDbException {
-        String query = "DELETE FROM Genre WHERE genre_id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, genreId);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new BooksDbException("Error deleting genre", e);
-        }
-    }
 }
