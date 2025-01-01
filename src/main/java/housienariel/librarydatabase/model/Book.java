@@ -8,7 +8,6 @@ import java.util.List;
 
 @Document(collection = "books")
 public class Book {
-    @Id
     private String ISBN;
     private String title;
     private Genre genre;

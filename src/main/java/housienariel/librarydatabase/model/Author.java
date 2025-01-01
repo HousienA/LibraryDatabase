@@ -7,7 +7,7 @@ import java.util.Date;
 
 @Document(collection = "authors") // Specifies the MongoDB collection
 public class Author {
-    @Id
+    
     private ObjectId authorId; // MongoDB uses ObjectId for IDs
     private String name;
     private Date authorDob; // Use java.util.Date for MongoDB

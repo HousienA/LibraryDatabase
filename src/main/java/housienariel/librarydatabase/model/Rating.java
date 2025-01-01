@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "ratings")
 public class Rating {
 
-    @Id
     private Integer ratingId;
     private int ratingValue;
 

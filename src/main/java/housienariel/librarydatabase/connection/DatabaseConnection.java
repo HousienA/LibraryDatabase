@@ -6,16 +6,15 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
 public class DatabaseConnection {
-    private static final String URI = "mongodb://localhost:27017";
-    private static final String DATABASE_NAME = "mongodbVSCodePlaygroundDB";
+    private static final String URI = "mongodb+srv://ahvp:mongodb@cluster0.mongodb.net/library?retryWrites=true&w=majority";
     private static MongoClient mongoClient;
     private static MongoDatabase database;
 
     public static MongoDatabase getConnection() {
         if (mongoClient == null) {
             mongoClient = MongoClients.create(URI);
-            database = mongoClient.getDatabase(DATABASE_NAME);
-            System.out.println("MongoDB connected successfully!");
+            database = mongoClient.getDatabase("library");
+            System.out.println("Connected to MongoDB Atlas successfully!");
         }
         return database;
     }

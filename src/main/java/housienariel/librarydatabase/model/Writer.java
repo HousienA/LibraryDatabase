@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "writers")
 public class Writer {
 
-    @Id
     private String bookISBN;
     private int authorId;
 
