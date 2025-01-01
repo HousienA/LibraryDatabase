@@ -2,6 +2,7 @@ package housienariel.librarydatabase.model.dao;
 
 import housienariel.librarydatabase.model.Author;
 import org.springframework.dao.DataAccessException;
+import housienariel.librarydatabase.model.BooksDbException;
 
 import java.util.List;
 
