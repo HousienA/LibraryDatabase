@@ -1,9 +1,14 @@
 package housienariel.librarydatabase.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Document(collection = "books")
 public class Book {
+    @Id
     private String ISBN;
     private String title;
     private Genre genre;
@@ -57,7 +62,6 @@ public class Book {
         this.authors = new ArrayList<>(authors);
     }
 
-
     public void addAuthor(Author author) {
         if (!authors.contains(author)) {
             authors.add(author);
@@ -82,5 +86,4 @@ public class Book {
         if (!(o instanceof Book book)) return false;
         return ISBN.equals(book.ISBN);
     }
-
 }

@@ -1,6 +1,12 @@
 package housienariel.librarydatabase.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "ratings")
 public class Rating {
+
+    @Id
     private Integer ratingId;
     private int ratingValue;
 
@@ -25,4 +31,3 @@ public class Rating {
         this.ratingValue = ratingValue;
     }
 }
-

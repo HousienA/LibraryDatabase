@@ -1,23 +1,31 @@
 package housienariel.librarydatabase.model.queries;
 
-import housienariel.librarydatabase.connection.DatabaseConnection;
-import housienariel.librarydatabase.model.BooksDbException;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import org.bson.Document;
 import housienariel.librarydatabase.model.Genre;
+import housienariel.librarydatabase.model.BooksDbException;
 import housienariel.librarydatabase.model.dao.GenreDAO;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GenreQuery implements GenreDAO {
+    private final MongoCollection<Document> genreCollection;
+
+    public GenreQuery() {
+        MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
+        genreCollection = mongoClient.getDatabase("library").getCollection("genres");
+    }
+
     @Override
     public void addGenre(Genre genre) throws BooksDbException {
-        String query = "INSERT INTO Genre (genre_name) VALUES (?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, genre.getGenreName());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
+        try {
+            Document doc = new Document("genreName", genre.getGenreName());
+            genreCollection.insertOne(doc);
+        } catch (Exception e) {
             throw new BooksDbException("Error adding genre", e);
         }
     }
@@ -25,28 +33,24 @@ public class GenreQuery implements GenreDAO {
     @Override
     public List<Genre> getAllGenres() throws BooksDbException {
         List<Genre> genres = new ArrayList<>();
-        String query = "SELECT * FROM Genre";
-        try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
-            while (rs.next()) {
-                Genre genre = new Genre(rs.getInt("genre_id"), rs.getString("genre_name"));
-                genres.add(genre);
+        try {
+            for (Document doc : genreCollection.find()) {
+                genres.add(new Genre(
+                    doc.getObjectId("_id").toString(),
+                    doc.getString("genreName")
+                ));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new BooksDbException("Error getting all genres", e);
         }
         return genres;
     }
 
     @Override
-    public void deleteGenre(int genreId) throws BooksDbException {
-        String query = "DELETE FROM Genre WHERE genre_id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, genreId);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
+    public void deleteGenre(String genreId) throws BooksDbException {
+        try {
+            genreCollection.deleteOne(Filters.eq("_id", genreId));
+        } catch (Exception e) {
             throw new BooksDbException("Error deleting genre", e);
         }
     }

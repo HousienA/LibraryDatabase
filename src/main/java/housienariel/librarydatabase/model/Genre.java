@@ -1,6 +1,12 @@
 package housienariel.librarydatabase.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "genres")
 public class Genre {
+
+    @Id
     private Integer genreId;
     private String genreName;
 
@@ -23,5 +29,13 @@ public class Genre {
 
     public void setGenreName(String genreName) {
         this.genreName = genreName;
+    }
+
+    @Override
+    public String toString() {
+        return "Genre{" +
+                "genreId=" + genreId +
+                ", genreName='" + genreName + '\'' +
+                '}';
     }
 }

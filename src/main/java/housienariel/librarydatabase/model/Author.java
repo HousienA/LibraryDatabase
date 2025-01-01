@@ -1,23 +1,28 @@
 package housienariel.librarydatabase.model;
 
-import java.sql.Date;
+import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.Date;
 
+@Document(collection = "authors") // Specifies the MongoDB collection
 public class Author {
-    private Integer authorId;
+    @Id
+    private ObjectId authorId; // MongoDB uses ObjectId for IDs
     private String name;
-    private Date authorDob;
+    private Date authorDob; // Use java.util.Date for MongoDB
 
-    public Author(Integer authorId, String name, Date authorDob) {
+    public Author(ObjectId authorId, String name, Date authorDob) {
         this.authorId = authorId;
         this.name = name;
         this.authorDob = authorDob;
     }
 
-    public Integer getAuthorId() {
+    public ObjectId getAuthorId() {
         return authorId;
     }
 
-    public void setAuthorId(Integer authorId) {
+    public void setAuthorId(ObjectId authorId) {
         this.authorId = authorId;
     }
 
@@ -36,5 +41,4 @@ public class Author {
     public void setAuthorDob(Date authorDob) {
         this.authorDob = authorDob;
     }
-
 }

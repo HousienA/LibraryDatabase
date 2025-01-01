@@ -1,38 +1,42 @@
 package housienariel.librarydatabase.connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Connection;
+
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 
 public class DatabaseConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/Library";
-    private static final String USER = "app_user";
-    private static final String PASSWORD = "strong_password";
-    private static Connection connection;
+    private static final String URI = "mongodb://localhost:27017";
+    private static final String DATABASE_NAME = "mongodbVSCodePlaygroundDB";
+    private static MongoClient mongoClient;
+    private static MongoDatabase database;
 
-    public static Connection getConnection() throws SQLException {
-        // Always return a new connection
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+    public static MongoDatabase getConnection() {
+        if (mongoClient == null) {
+            mongoClient = MongoClients.create(URI);
+            database = mongoClient.getDatabase(DATABASE_NAME);
+            System.out.println("MongoDB connected successfully!");
+        }
+        return database;
     }
 
     public static void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                System.out.println("Database connection closed successfully!");
-            }
-        } catch (SQLException e) {
-            System.err.println("Error closing database connection: " + e.getMessage());
-            e.printStackTrace();
+        if (mongoClient != null) {
+            mongoClient.close();
+            System.out.println("MongoDB connection closed successfully!");
         }
     }
 
     public static void main(String[] args) {
         try {
-            Connection conn = getConnection();
-            System.out.println("Database connected successfully!");
-            conn.close();
-        } catch (SQLException e) {
-            System.err.println("Database connection failed!");
+            MongoDatabase db = getConnection();
+            System.out.println("Connected to database: " + db.getName());
+            db.getCollection("books").find().forEach((Document doc) -> {
+                System.out.println(doc.toJson());
+            });
+            closeConnection();
+        } catch (Exception e) {
+            System.err.println("MongoDB connection failed!");
             e.printStackTrace();
         }
     }

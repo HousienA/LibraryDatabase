@@ -29,7 +29,6 @@ public class BookController implements Initializable {
     private AuthorDAO authorDAO;
     private List<Author> selectedAuthors = new ArrayList<>();
 
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         setupTableView();
@@ -46,7 +45,7 @@ public class BookController implements Initializable {
         setupGenreComboBox();
         refreshTableView();
     }
-    
+
     // Track the data of the selected book in the table view
     private void setupSelectionListener() {
         bookTableView.getSelectionModel().selectedItemProperty().addListener(
@@ -251,7 +250,7 @@ public class BookController implements Initializable {
 
         bookTableView.getColumns().addAll(isbnCol, titleCol);
     }
-    
+
     // To refresh the table view after adding or updating a book
     private void refreshTableView() {
         Task<List<Book>> refreshTask = new Task<>() {
@@ -377,5 +376,4 @@ public class BookController implements Initializable {
         alert.setContentText(message);
         alert.showAndWait();
     }
-
 }

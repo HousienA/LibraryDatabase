@@ -3,17 +3,12 @@ package housienariel.librarydatabase;
 import housienariel.librarydatabase.controller.*;
 import housienariel.librarydatabase.model.dao.*;
 import housienariel.librarydatabase.model.queries.*;
-import housienariel.librarydatabase.connection.DatabaseConnection;
+import housienariel.librarydatabase.connection.MongoDBConnection;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
 import javafx.stage.Stage;
-
-
-import java.net.URL;
 
 public class LibraryApp extends Application {
     @Override
@@ -23,9 +18,8 @@ public class LibraryApp extends Application {
             Scene scene = new Scene(loader.load(), 800, 600);
             primaryStage.setTitle("Library Management System");
 
-            // Add this close handler
             primaryStage.setOnCloseRequest(event -> {
-                DatabaseConnection.closeConnection();
+                MongoDBConnection.closeConnection();
             });
 
             primaryStage.setScene(scene);

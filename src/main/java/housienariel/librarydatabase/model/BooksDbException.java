@@ -1,8 +1,8 @@
 package housienariel.librarydatabase.model;
 
-import java.sql.SQLException;
+import org.springframework.dao.DataAccessException;
 
-public class BooksDbException extends SQLException {
+public class BooksDbException extends DataAccessException {
     public BooksDbException(String message) {
         super(message);
     }

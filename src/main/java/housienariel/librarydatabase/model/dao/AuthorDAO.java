@@ -1,16 +1,14 @@
 package housienariel.librarydatabase.model.dao;
 
 import housienariel.librarydatabase.model.Author;
-import housienariel.librarydatabase.model.BooksDbException;
-
-import java.sql.SQLException;
+import org.springframework.dao.DataAccessException;
 import java.util.List;
 
 public interface AuthorDAO {
-    void addAuthor(Author author) throws BooksDbException;
-    List<Author> getAllAuthors() throws BooksDbException;
-    Author getAuthorById(int authorId) throws BooksDbException;
-    void updateAuthor(Author author) throws BooksDbException;
-    void deleteAuthor(int authorId) throws BooksDbException;
-    List<Author> searchAuthorsByName(String namePattern) throws BooksDbException;
+    void addAuthor(Author author) throws DataAccessException;
+    List<Author> getAllAuthors() throws DataAccessException;
+    Author getAuthorById(int authorId) throws DataAccessException;
+    void updateAuthor(Author author) throws DataAccessException;
+    void deleteAuthor(int authorId) throws DataAccessException;
+    List<Author> searchAuthorsByName(String namePattern) throws DataAccessException;
 }
