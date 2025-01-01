@@ -47,12 +47,13 @@
             <version>8.0.33</version>
         </dependency>
 
-        <!-- MongoDB Java Driver Dependency -->
+        <!-- MongoDB Java Driver Dependency (Use the latest stable version) -->
         <dependency>
             <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-            <version>4.8.0</version> <!-- You can use the latest stable version -->
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>4.8.0</version> <!-- Or the latest version available -->
         </dependency>
+
     </dependencies>
 
     <build>

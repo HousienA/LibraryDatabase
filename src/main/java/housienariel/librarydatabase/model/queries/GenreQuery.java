@@ -13,54 +13,32 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GenreQuery implements GenreDAO {
-<<<<<<< HEAD
     private final MongoCollection<Document> genreCollection;
 
+    // MongoDB client initialization
     public GenreQuery() {
         MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
         genreCollection = mongoClient.getDatabase("library").getCollection("genres");
     }
 
-    @Override
-    public void addGenre(Genre genre) throws BooksDbException {
-        try {
-            Document doc = new Document("genreName", genre.getGenreName());
-            genreCollection.insertOne(doc);
-        } catch (Exception e) {
-            throw new BooksDbException("Error adding genre", e);
-=======
-
     /**
+     * Add a genre to the database
      * @param genre the genre to add
      * @throws BooksDbException if an error occurs while adding the genre
      */
     @Override
     public void addGenre(Genre genre) throws BooksDbException {
-        String query = "INSERT INTO Genre (genre_name) VALUES (?)";
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            conn.setAutoCommit(false);
-
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, genre.getGenreName());
-                stmt.executeUpdate();
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw new BooksDbException("Error adding genre", e);
-            }
-        } catch (SQLException e) {
-            throw new BooksDbException("Transaction error", e);
-        } finally {
-            try (Connection conn = DatabaseConnection.getConnection()) {
-                conn.setAutoCommit(true);
-            } catch (SQLException e) {
-                throw new BooksDbException("Error restoring auto-commit mode", e);
-            }
->>>>>>> 09cf76f10e6ce1acbc891d42a98dfced8ca6e6a8
+        try {
+            // Creating a MongoDB document for the genre
+            Document doc = new Document("genreName", genre.getGenreName());
+            genreCollection.insertOne(doc);
+        } catch (Exception e) {
+            throw new BooksDbException("Error adding genre", e);
         }
     }
 
     /**
+     * Retrieve all genres from the database
      * @return a list of all genres
      * @throws BooksDbException if an error occurs while retrieving genres
      */
@@ -68,9 +46,10 @@ public class GenreQuery implements GenreDAO {
     public List<Genre> getAllGenres() throws BooksDbException {
         List<Genre> genres = new ArrayList<>();
         try {
+            // Iterate through MongoDB collection and create Genre objects
             for (Document doc : genreCollection.find()) {
                 genres.add(new Genre(
-                    doc.getObjectId("_id").toString(),
+                    doc.getObjectId("_id").toString(),  // Assuming genre has an _id field as a MongoDB ObjectId
                     doc.getString("genreName")
                 ));
             }
@@ -80,15 +59,18 @@ public class GenreQuery implements GenreDAO {
         return genres;
     }
 
-<<<<<<< HEAD
+    /**
+     * Delete a genre by its ID
+     * @param genreId the ID of the genre to delete
+     * @throws BooksDbException if an error occurs while deleting the genre
+     */
     @Override
     public void deleteGenre(String genreId) throws BooksDbException {
         try {
+            // Delete genre from MongoDB by its _id
             genreCollection.deleteOne(Filters.eq("_id", genreId));
         } catch (Exception e) {
             throw new BooksDbException("Error deleting genre", e);
         }
     }
-=======
->>>>>>> 09cf76f10e6ce1acbc891d42a98dfced8ca6e6a8
 }
