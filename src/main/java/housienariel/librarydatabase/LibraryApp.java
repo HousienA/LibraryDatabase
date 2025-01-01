@@ -18,10 +18,6 @@ public class LibraryApp extends Application {
             Scene scene = new Scene(loader.load(), 800, 600);
             primaryStage.setTitle("Library Management System");
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 09cf76f10e6ce1acbc891d42a98dfced8ca6e6a8
             primaryStage.setOnCloseRequest(event -> {
                 MongoDBConnection.closeConnection();
             });
