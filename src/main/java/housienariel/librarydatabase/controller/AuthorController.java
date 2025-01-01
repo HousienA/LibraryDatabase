@@ -149,10 +149,6 @@ public class AuthorController implements Initializable {
         new Thread(loadAuthorsTask).start();
     }
 
-    private void setupTableView() {
-        // Set up columns and other UI elements for your table view.
-    }
-
     private void setupSelectionListener() {
         authorTableView.setOnMouseClicked((MouseEvent event) -> {
             selectedAuthor = authorTableView.getSelectionModel().getSelectedItem();
