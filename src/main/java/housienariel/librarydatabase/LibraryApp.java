@@ -1,9 +1,6 @@
 package housienariel.librarydatabase;
 
-import housienariel.librarydatabase.controller.*;
-import housienariel.librarydatabase.model.dao.*;
-import housienariel.librarydatabase.model.queries.*;
-import housienariel.librarydatabase.connection.MongoDBConnection;
+import housienariel.librarydatabase.connection.DatabaseConnection;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -12,14 +9,14 @@ import javafx.stage.Stage;
 
 public class LibraryApp extends Application {
     @Override
-    public void start(Stage primaryStage) {
+    public void start(@SuppressWarnings("exports") Stage primaryStage) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/housienariel/librarydatabase/view/MainView.fxml"));
             Scene scene = new Scene(loader.load(), 800, 600);
             primaryStage.setTitle("Library Management System");
 
             primaryStage.setOnCloseRequest(event -> {
-                MongoDBConnection.closeConnection();
+                DatabaseConnection.closeConnection();
             });
 
             primaryStage.setScene(scene);
