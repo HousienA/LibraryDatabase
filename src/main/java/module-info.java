@@ -1,7 +1,7 @@
 module housienariel.librarydatabase {
     requires javafx.controls;
     requires javafx.fxml;
-    requires java.sql;
+    requires mongo.java.driver;
 
     opens housienariel.librarydatabase to javafx.fxml;
     opens housienariel.librarydatabase.connection to javafx.fxml;
