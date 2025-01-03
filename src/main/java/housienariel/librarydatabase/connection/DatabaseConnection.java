@@ -13,7 +13,7 @@ public class DatabaseConnection {
     public static MongoDatabase getConnection() {
         if (mongoClient == null) {
             mongoClient = MongoClients.create(URI);
-            database = mongoClient.getDatabase("Library");
+            database = mongoClient.getDatabase("Library_Lab2");
             System.out.println("Connected to MongoDB Atlas successfully!");
         }
         return database;
