@@ -42,7 +42,6 @@ public class SearchController {
         setupBasicColumn("Rating", book -> book.getRating() != null ?
                 String.valueOf(book.getRating().getRatingValue()) : "No rating");
 
-        // special handling for authors column
         setupAuthorsColumn();
     }
 
