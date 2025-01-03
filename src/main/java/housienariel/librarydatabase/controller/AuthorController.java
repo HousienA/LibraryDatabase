@@ -1,14 +1,20 @@
-import com.mongodb.client.MongoDatabase;
+package housienariel.librarydatabase.controller;
+
+import housienariel.librarydatabase.model.*;
+import housienariel.librarydatabase.model.dao.*;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.beans.property.SimpleStringProperty;
 
-import java.util.List;
-import java.util.Date;
-import java.util.ResourceBundle;
 import java.net.URL;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
 
 public class AuthorController implements Initializable {
     @FXML private TextField nameField;
@@ -47,8 +53,8 @@ public class AuthorController implements Initializable {
 
         Task<Void> addAuthorTask = new Task<>() {
             @Override
-            protected Void call() throws Exception {
-                Author author = new Author(0, nameField.getText().trim(), java.util.Date.from(dobPicker.getValue().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()));
+            protected Void call() throws BooksDbException {
+                Author author = new Author(null, nameField.getText().trim(), java.sql.Date.valueOf(dobPicker.getValue()));
                 authorDAO.addAuthor(author);
                 return null;
             }
@@ -82,9 +88,9 @@ public class AuthorController implements Initializable {
 
         Task<Void> updateAuthorTask = new Task<>() {
             @Override
-            protected Void call() throws Exception {
+            protected Void call() throws BooksDbException {
                 selectedAuthor.setName(nameField.getText().trim());
-                selectedAuthor.setAuthorDob(java.util.Date.from(dobPicker.getValue().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()));
+                selectedAuthor.setAuthorDob(java.sql.Date.valueOf(dobPicker.getValue()));
                 authorDAO.updateAuthor(selectedAuthor);
                 return null;
             }
@@ -105,6 +111,14 @@ public class AuthorController implements Initializable {
     }
 
     @FXML
+    private void handleClear() {
+        clearFields();
+        selectedAuthor = null;
+        updateButton.setDisable(true);
+        addButton.setDisable(false);
+    }
+
+    @FXML
     private void handleSearchAuthor() {
         String searchTerm = searchAuthorField.getText().trim();
         if (searchTerm.isEmpty()) {
@@ -114,7 +128,7 @@ public class AuthorController implements Initializable {
 
         Task<List<Author>> searchAuthorsTask = new Task<>() {
             @Override
-            protected List<Author> call() throws Exception {
+            protected List<Author> call() throws BooksDbException {
                 return authorDAO.searchAuthorsByName(searchTerm);
             }
         };
@@ -130,10 +144,73 @@ public class AuthorController implements Initializable {
         new Thread(searchAuthorsTask).start();
     }
 
+    private void setupTableView() {
+        TableColumn<Author, String> idCol = new TableColumn<>("ID");
+        idCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getAuthorId()));
+
+        TableColumn<Author, String> nameCol = new TableColumn<>("Name");
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+        TableColumn<Author, LocalDate> dobCol = new TableColumn<>("Date of Birth");
+        dobCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getAuthorDob().toLocalDate().toString()));
+
+        authorTableView.getColumns().addAll(idCol, nameCol, dobCol);
+    }
+
+    private void setupBooksColumn() {
+        TableColumn<Author, String> booksCol = new TableColumn<>("Books");
+        booksCol.setCellValueFactory(data -> {
+            Author author = data.getValue();
+            try {
+                List<String> bookISBNs = writerDAO.getBooksByAuthor(author.getAuthorId());
+                List<String> bookTitles = new ArrayList<>();
+                for (String isbn : bookISBNs) {
+                    Book book = bookDAO.getBookByISBN(isbn);
+                    if (book != null) {
+                        bookTitles.add(book.getTitle());
+                    }
+                }
+                return new SimpleStringProperty(String.join(", ", bookTitles));
+            } catch (BooksDbException e) {
+                return new SimpleStringProperty("Error loading books");
+            }
+        });
+
+        authorTableView.getColumns().add(booksCol);
+    }
+
+    private void setupSelectionListener() {
+        authorTableView.getSelectionModel().selectedItemProperty().addListener(
+                (obs, oldSelection, newSelection) -> {
+                    if (newSelection != null) {
+                        selectedAuthor = newSelection;
+                        nameField.setText(newSelection.getName());
+                        dobPicker.setValue(newSelection.getAuthorDob().toLocalDate());
+                        updateButton.setDisable(false);
+                        addButton.setDisable(true);
+                    }
+                }
+        );
+    }
+
+    private boolean validateInput() {
+        if (nameField.getText().trim().isEmpty()) {
+            showError("Please enter author name");
+            return false;
+        }
+
+        if (dobPicker.getValue() == null) {
+            showError("Please select date of birth");
+            return false;
+        }
+
+        return true;
+    }
+
     private void loadAuthors() {
         Task<List<Author>> loadAuthorsTask = new Task<>() {
             @Override
-            protected List<Author> call() throws Exception {
+            protected List<Author> call() throws BooksDbException {
                 return authorDAO.getAllAuthors();
             }
         };
@@ -147,17 +224,6 @@ public class AuthorController implements Initializable {
         });
 
         new Thread(loadAuthorsTask).start();
-    }
-
-    private void setupSelectionListener() {
-        authorTableView.setOnMouseClicked((MouseEvent event) -> {
-            selectedAuthor = authorTableView.getSelectionModel().getSelectedItem();
-            if (selectedAuthor != null) {
-                nameField.setText(selectedAuthor.getName());
-                dobPicker.setValue(selectedAuthor.getAuthorDob().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate());
-                updateButton.setDisable(false);
-            }
-        });
     }
 
     private void clearFields() {
@@ -178,9 +244,5 @@ public class AuthorController implements Initializable {
         alert.setTitle("Success");
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    private boolean validateInput() {
-        return !nameField.getText().trim().isEmpty() && dobPicker.getValue() != null;
     }
 }

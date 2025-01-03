@@ -1,4 +1,3 @@
-// GenreController.java
 package housienariel.librarydatabase.controller;
 
 import housienariel.librarydatabase.model.*;
