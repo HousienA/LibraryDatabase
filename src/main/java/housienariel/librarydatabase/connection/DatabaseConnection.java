@@ -6,7 +6,7 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
 public class DatabaseConnection {
-    private static final String URI = "mongodb+srv://ahvp:mongodb@cluster0.mongodb.net/library?retryWrites=true&w=majority";
+    private static final String URI = "mongodb+srv://ahvp:<db_password>@cluster0.k9qvo.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
     private static MongoClient mongoClient;
     private static MongoDatabase database;
 
