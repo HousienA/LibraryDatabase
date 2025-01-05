@@ -1,5 +1,7 @@
 package housienariel.librarydatabase;
 
+import java.io.IOException;
+
 import housienariel.librarydatabase.connection.DatabaseConnection;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -8,6 +10,7 @@ import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
 public class LibraryApp extends Application {
+    @SuppressWarnings("unused")
     @Override
     public void start(@SuppressWarnings("exports") Stage primaryStage) {
         try {
@@ -22,8 +25,7 @@ public class LibraryApp extends Application {
             primaryStage.setScene(scene);
             primaryStage.show();
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Application Error");
