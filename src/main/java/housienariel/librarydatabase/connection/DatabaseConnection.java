@@ -6,15 +6,15 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
 public class DatabaseConnection {
-    private static final String URI = "mongodb+srv://ahvp:mongodb@cluster0.k9qvo.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+    private static final String URI = "mongodb://localhost:27017";
     private static MongoClient mongoClient;
     private static MongoDatabase database;
 
     public static MongoDatabase getConnection() {
         if (mongoClient == null) {
             mongoClient = MongoClients.create(URI);
-            database = mongoClient.getDatabase("Library_Lab2");
-            System.out.println("Connected to MongoDB Atlas successfully!");
+            database = mongoClient.getDatabase("Library");
+            System.out.println("Connected to MongoDB Community successfully!");
         }
         return database;
     }
