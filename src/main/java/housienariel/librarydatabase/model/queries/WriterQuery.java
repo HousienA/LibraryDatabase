@@ -29,7 +29,6 @@ public class WriterQuery implements WriterDAO {
     @Override
     public void addAuthorToBook(String bookISBN, Author author) throws BooksDbException {
         try {
-            // Insert the author and the book association into MongoDB
             Document doc = new Document("bookISBN", bookISBN)
                 .append("authorName", author.getName());
             writerCollection.insertOne(doc);
@@ -48,13 +47,11 @@ public class WriterQuery implements WriterDAO {
     public List<Author> getAuthorsForBook(String isbn) throws BooksDbException {
         List<Author> authors = new ArrayList<>();
         try {
-            // Find all documents where the bookISBN matches the given ISBN
             for (Document doc : writerCollection.find(Filters.eq("bookISBN", isbn))) {
-                // Create Author objects for each associated author
                 authors.add(new Author(
-                    null, // No ID available unless authors are referenced
+                    null,
                     doc.getString("authorName"),
-                    null  // Assuming no DOB or other author data in this collection
+                    null
                 ));
             }
         } catch (Exception e) {
@@ -73,9 +70,8 @@ public class WriterQuery implements WriterDAO {
     public List<String> getBooksByAuthor(String authorName) throws BooksDbException {
         List<String> bookISBNs = new ArrayList<>();
         try {
-            // Find all documents where the authorName matches the given author's name
+
             for (Document doc : writerCollection.find(Filters.eq("authorName", authorName))) {
-                // Extract bookISBN from each document and add it to the list
                 bookISBNs.add(doc.getString("bookISBN"));
             }
         } catch (Exception e) {

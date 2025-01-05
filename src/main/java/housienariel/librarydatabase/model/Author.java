@@ -5,13 +5,12 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.Date;
 
-@Document(collection = "authors") // Specifies the MongoDB collection
+@Document(collection = "authors") 
 public class Author {
     @Id
-    private ObjectId authorId; // MongoDB uses ObjectId for IDs
+    private ObjectId authorId;
     private String name;
-    private Date authorDob; // Use java.util.Date for MongoDB
-
+    private Date authorDob;
     public Author(ObjectId authorId, String name, Date authorDob) {
         this.authorId = authorId;
         this.name = name;

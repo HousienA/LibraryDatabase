@@ -46,10 +46,9 @@ public class GenreQuery implements GenreDAO {
     public List<Genre> getAllGenres() throws BooksDbException {
         List<Genre> genres = new ArrayList<>();
         try {
-            // Iterate through MongoDB collection and create Genre objects
             for (Document doc : genreCollection.find()) {
                 genres.add(new Genre(
-                    doc.getObjectId("_id").toString(),  // Assuming genre has an _id field as a MongoDB ObjectId
+                    doc.getObjectId("_id").toString(),
                     doc.getString("genreName")
                 ));
             }
@@ -67,7 +66,6 @@ public class GenreQuery implements GenreDAO {
     @Override
     public void deleteGenre(String genreId) throws BooksDbException {
         try {
-            // Delete genre from MongoDB by its _id
             genreCollection.deleteOne(Filters.eq("_id", genreId));
         } catch (Exception e) {
             throw new BooksDbException("Error deleting genre", e);
