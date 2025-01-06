@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class AuthorController implements Initializable {
+public class AuthorController implements Initializable{
     @FXML private TextField nameField;
     @FXML private DatePicker dobPicker;
     @FXML private TableView<Author> authorTableView;
@@ -54,7 +54,7 @@ public class AuthorController implements Initializable {
         Task<Void> addAuthorTask = new Task<>() {
             @Override
             protected Void call() throws BooksDbException {
-                Author author = new Author(null, nameField.getText().trim(), java.sql.Date.valueOf(dobPicker.getValue()));
+                Author author = new Author(null, nameField.getText().trim(), java.util.Date.valueOf(dobPicker.getValue()));
                 authorDAO.addAuthor(author);
                 return null;
             }
@@ -90,7 +90,7 @@ public class AuthorController implements Initializable {
             @Override
             protected Void call() throws BooksDbException {
                 selectedAuthor.setName(nameField.getText().trim());
-                selectedAuthor.setAuthorDob(java.sql.Date.valueOf(dobPicker.getValue()));
+                selectedAuthor.setAuthorDob(java.util.Date.valueOf(dobPicker.getValue()));
                 authorDAO.updateAuthor(selectedAuthor);
                 return null;
             }
