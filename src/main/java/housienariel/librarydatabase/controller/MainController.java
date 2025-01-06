@@ -22,6 +22,7 @@ public class MainController implements Initializable {
     private GenreDAO genreDAO;
     private WriterDAO writerDAO;
 
+    @SuppressWarnings("unused")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         Task<Void> initializeTask = new Task<>() {

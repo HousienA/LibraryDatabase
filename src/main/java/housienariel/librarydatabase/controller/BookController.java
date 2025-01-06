@@ -274,7 +274,7 @@ public class BookController implements Initializable {
         new Thread(refreshTask).start();
     }
 
-    // Search for authors by name when creating a book
+
     @FXML
     private void handleAuthorSearch() {
         String searchTerm = authorSearchField.getText().trim();
@@ -335,7 +335,7 @@ public class BookController implements Initializable {
         setupSelectedAuthorsListView(selectedAuthorsListView);
     }
 
-    // Get authors names when searching in book creation
+
     private void setupSelectedAuthorsListView(ListView<Author> listView) {
         listView.setCellFactory(lv -> new ListCell<Author>() {
             @Override
@@ -351,8 +351,8 @@ public class BookController implements Initializable {
     }
 
     private void updateSelectedAuthorsListView() {
-        selectedAuthorsListView.getItems().clear();  // Clear current items
-        selectedAuthorsListView.getItems().addAll(selectedAuthors);  // Add all selected authors
+        selectedAuthorsListView.getItems().clear();
+        selectedAuthorsListView.getItems().addAll(selectedAuthors);
     }
 
     private void clearFields() {

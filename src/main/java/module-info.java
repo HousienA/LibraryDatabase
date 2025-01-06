@@ -2,6 +2,9 @@ module housienariel.librarydatabase {
     requires javafx.controls;
     requires javafx.fxml;
     requires org.mongodb.driver.sync.client;
+    requires org.mongodb.bson;
+    requires java.xml;
+    requires java.desktop;
 
     opens housienariel.librarydatabase to javafx.fxml;
     opens housienariel.librarydatabase.connection to javafx.fxml;

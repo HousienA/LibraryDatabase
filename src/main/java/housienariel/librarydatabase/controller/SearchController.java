@@ -23,6 +23,7 @@ public class SearchController {
 
 
     @FXML
+    @SuppressWarnings("unused")
     private void initialize() {
         setupTableView();
         setupRatingFilter();
@@ -51,6 +52,7 @@ public class SearchController {
         searchResultsTable.getColumns().add(column);
     }
 
+    @SuppressWarnings("unused")
     private void setupAuthorsColumn() {
     TableColumn<Book, String> authorsColumn = new TableColumn<>("Authors");
     authorsColumn.setCellValueFactory(cellData -> {
@@ -81,6 +83,7 @@ public class SearchController {
     searchResultsTable.getColumns().add(authorsColumn);
 }
 
+    @SuppressWarnings("unused")
     private void setupRatingFilter() {
         ratingFilterBox.getItems().addAll(1, 2, 3, 4, 5);
         ratingFilterBox.setPromptText("Select Rating");
