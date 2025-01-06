@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.ArrayList;
 import java.util.List;
 
-@Document(collection = "books")
+@Document(collection = "Book")
 public class Book {
     private String ISBN;
     private String title;
