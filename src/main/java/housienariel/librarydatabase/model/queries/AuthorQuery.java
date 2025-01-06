@@ -17,7 +17,7 @@ public class AuthorQuery implements AuthorDAO {
 
     public AuthorQuery() {
         MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
-        authorCollection = mongoClient.getDatabase("library").getCollection("authors");
+        authorCollection = mongoClient.getDatabase("Library").getCollection("Author");
     }
 
     @Override
