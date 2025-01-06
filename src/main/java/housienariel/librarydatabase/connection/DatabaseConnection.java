@@ -26,6 +26,7 @@ public class DatabaseConnection {
         }
     }
 
+    @SuppressWarnings("CallToPrintStackTrace")
     public static void main(String[] args) {
         try {
             MongoDatabase db = getConnection();
