@@ -28,7 +28,7 @@ public class AuthorQuery implements AuthorDAO {
     public void addAuthor(Author author) throws BooksDbException {
         try {
             Document doc = new Document("name", author.getName())
-                    .append("authorDob", author.getAuthorDob());
+                    .append("author_dob", author.getAuthorDob());
             authorCollection.insertOne(doc);
         } catch (Exception e) {
             throw new BooksDbException("Error adding author: " + e.getMessage(), e);
