@@ -322,8 +322,8 @@ public class BookController implements Initializable {
                 return null;
             });
 
-            dialog.showAndWait().ifPresent(selectedAuthors -> {
-                for (Author author : selectedAuthors) {
+            dialog.showAndWait().ifPresent(selectedAuthorsResult -> {
+                for (Author author : selectedAuthorsResult) {
                     if (!this.selectedAuthors.contains(author)) {
                         this.selectedAuthors.add(author);
                     }
