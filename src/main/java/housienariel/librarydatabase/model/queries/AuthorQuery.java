@@ -60,7 +60,7 @@ public class AuthorQuery implements AuthorDAO {
 
             if (doc != null) {
                 return new Author(
-                        doc.getObjectId("_id"), // Using ObjectId directly
+                        doc.getObjectId("_id"), 
                         doc.getString("name"),
                         doc.getDate("author_dob")
                 );
