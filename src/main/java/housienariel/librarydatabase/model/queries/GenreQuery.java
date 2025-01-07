@@ -18,7 +18,7 @@ public class GenreQuery implements GenreDAO {
 
     public GenreQuery() {
         MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
-        genreCollection = mongoClient.getDatabase("library").getCollection("genres");
+        genreCollection = mongoClient.getDatabase("Library").getCollection("Genre");
     }
 
     /**

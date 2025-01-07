@@ -1,16 +1,18 @@
 package housienariel.librarydatabase.model.queries;
 
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import housienariel.librarydatabase.model.Author;
-import housienariel.librarydatabase.model.BooksDbException;
-import housienariel.librarydatabase.model.dao.AuthorDAO;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+
+import housienariel.librarydatabase.model.Author;
+import housienariel.librarydatabase.model.BooksDbException;
+import housienariel.librarydatabase.model.dao.AuthorDAO;
 
 public class AuthorQuery implements AuthorDAO {
 
@@ -99,7 +101,7 @@ public class AuthorQuery implements AuthorDAO {
             Document query = new Document("name", new Document("$regex", namePattern).append("$options", "i"));
             for (Document doc : authorCollection.find(query)) {
                 authors.add(new Author(
-                        doc.getObjectId("_id"), // Using ObjectId directly
+                        doc.getObjectId("_id"), 
                         doc.getString("name"),
                         doc.getDate("authorDob")
                 ));

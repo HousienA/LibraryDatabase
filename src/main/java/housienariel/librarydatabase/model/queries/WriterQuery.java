@@ -1,18 +1,18 @@
 package housienariel.librarydatabase.model.queries;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bson.Document;
+import org.bson.types.ObjectId;
+
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
-import org.bson.Document;
 
 import housienariel.librarydatabase.model.Author;
 import housienariel.librarydatabase.model.BooksDbException;
 import housienariel.librarydatabase.model.dao.WriterDAO;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.bson.types.ObjectId;
 
 public class WriterQuery implements WriterDAO {
     private final MongoCollection<Document> writerCollection;

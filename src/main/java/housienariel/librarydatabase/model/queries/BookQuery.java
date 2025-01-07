@@ -20,7 +20,7 @@ public class BookQuery implements BookDAO {
 
     public BookQuery() {
         MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
-        bookCollection = mongoClient.getDatabase("library").getCollection("books");
+        bookCollection = mongoClient.getDatabase("Library").getCollection("Book");
     }
 
     @Override
