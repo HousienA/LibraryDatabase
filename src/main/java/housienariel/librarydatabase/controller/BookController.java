@@ -46,7 +46,6 @@ public class BookController implements Initializable {
         refreshTableView();
     }
 
-    // Track the data of the selected book in the table view
     @SuppressWarnings("unused")
     private void setupSelectionListener() {
         bookTableView.getSelectionModel().selectedItemProperty().addListener(
@@ -58,7 +57,6 @@ public class BookController implements Initializable {
         );
     }
 
-    // Fill the fields with the data of the selected book
     private void populateFields(Book book) {
         isbnField.setText(book.getISBN());
         titleField.setText(book.getTitle());
@@ -69,13 +67,9 @@ public class BookController implements Initializable {
             }
         }
 
-        if (book.getRating() != null) {
-            ratingComboBox.setValue(book.getRating().getRatingValue());
-        } else {
-            ratingComboBox.setValue(null);
-        }
+        if (book.getRating() != null) ratingComboBox.setValue(book.getRating().getRatingValue());
+        else ratingComboBox.setValue(null);
 
-        // Clear previous authors and add the book's authors
         selectedAuthors.clear();
         selectedAuthorsListView.getItems().clear();
 
@@ -258,7 +252,7 @@ public class BookController implements Initializable {
         bookTableView.getColumns().addAll(isbnCol, titleCol);
     }
 
-    // To refresh the table view after adding or updating a book
+    // error 
     @SuppressWarnings("unused")
     private void refreshTableView() {
         Task<List<Book>> refreshTask = new Task<>() {
@@ -300,7 +294,6 @@ public class BookController implements Initializable {
                 showError("No authors found with that name");
                 return;
             }
-            // Create a popup to select authors
             Dialog<List<Author>> dialog = new Dialog<>();
             dialog.setTitle("Select Authors");
             dialog.setHeaderText("Select one or more authors from the results");
@@ -309,7 +302,6 @@ public class BookController implements Initializable {
             authorListView.getItems().addAll(authors);
             authorListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-            // set list for the search authors
             setupSelectedAuthorsListView(authorListView);
 
             dialog.getDialogPane().setContent(authorListView);

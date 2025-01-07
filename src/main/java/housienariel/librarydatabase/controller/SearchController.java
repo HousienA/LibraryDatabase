@@ -26,7 +26,7 @@ public class SearchController {
     @SuppressWarnings("unused")
     private void initialize() {
         setupTableView();
-        // setupRatingFilter();
+        setupRatingFilter();
     }
 
     public void injectDAOs(BookDAO bookDAO, GenreDAO genreDAO, WriterDAO writerDAO) {

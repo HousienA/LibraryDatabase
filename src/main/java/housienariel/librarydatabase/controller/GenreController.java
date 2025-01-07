@@ -1,17 +1,22 @@
 package housienariel.librarydatabase.controller;
 
-import housienariel.librarydatabase.model.*;
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
+
+import housienariel.librarydatabase.model.BooksDbException;
+import housienariel.librarydatabase.model.Genre;
 import housienariel.librarydatabase.model.dao.GenreDAO;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-
-import java.net.URL;
-import java.util.List;
-import java.util.ResourceBundle;
 
 public class GenreController implements Initializable {
     @FXML private TextField genreNameField;
@@ -73,13 +78,12 @@ public class GenreController implements Initializable {
 
     @SuppressWarnings("unchecked")
     private void setupTableView() {
-        // Genre ID Column
+
         TableColumn<Genre, Integer> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("genreId"));
 
-        // Genre Name Column
         TableColumn<Genre, String> nameColumn = new TableColumn<>("Genre Name");
-        nameColumn.setCellValueFactory(new PropertyValueFactory<>("genreName"));
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("genreName")) ;
 
         genreTableView.getColumns().addAll(idColumn, nameColumn);
     }

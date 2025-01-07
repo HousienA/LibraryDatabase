@@ -74,7 +74,7 @@ public class AuthorQuery implements AuthorDAO {
     @Override
     public void updateAuthor(Author author) throws BooksDbException {
         try {
-            Document query = new Document("_id", author.getAuthorId()); // Assuming author.getAuthorId() returns ObjectId
+            Document query = new Document("_id", author.getAuthorId());
             Document updatedDoc = new Document("name", author.getName())
                     .append("author_dob", author.getAuthorDob());
             Document updateOperation = new Document("$set", updatedDoc);

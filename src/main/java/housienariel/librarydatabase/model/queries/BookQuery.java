@@ -45,7 +45,7 @@ public class BookQuery implements BookDAO {
             Document doc = bookCollection.find(query).first();
             if (doc != null) {
                 Genre genre = new Genre(doc.getObjectId("genre_id"), null);
-                Rating rating = doc.containsKey("rating_id") ? new Rating(null, doc.getInteger("rating_id")) : null;
+                Rating rating = doc.containsKey("rating_id") ? new Rating(null, doc.getInteger("rating_value")) : null;
                 return new Book(
                         doc.getString("ISBN"),
                         doc.getString("title"),
@@ -59,14 +59,14 @@ public class BookQuery implements BookDAO {
         return null;
     }
 
-    // error message 
+    // error
     @Override
     public List<Book> getAllBooks() throws BooksDbException {
         List<Book> books = new ArrayList<>();
         try {
             for (Document doc : bookCollection.find()) {
                 Genre genre = new Genre(doc.getObjectId("genre_id"), null);
-                Rating rating = doc.containsKey("rating_id") ? new Rating(null, doc.getInteger("rating_id")) : null;
+                Rating rating = doc.containsKey("rating_id") ? new Rating(null, doc.getInteger("rating_value")) : null;
                 books.add(new Book(
                         doc.getString("ISBN"),
                         doc.getString("title"),

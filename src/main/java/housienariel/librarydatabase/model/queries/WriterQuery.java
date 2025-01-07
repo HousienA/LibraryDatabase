@@ -31,8 +31,8 @@ public class WriterQuery implements WriterDAO {
     @Override
     public void addAuthorToBook(String bookISBN, Author author) throws BooksDbException {
         try {
-            Document doc = new Document("bookISBN", bookISBN)
-                .append("authorName", author.getName());
+            Document doc = new Document("ISBN", bookISBN)
+                .append("name", author.getName());
             writerCollection.insertOne(doc);
         } catch (Exception e) {
             throw new BooksDbException("Error adding author to book", e);
@@ -49,10 +49,10 @@ public class WriterQuery implements WriterDAO {
     public List<Author> getAuthorsForBook(String isbn) throws BooksDbException {
         List<Author> authors = new ArrayList<>();
         try {
-            for (Document doc : writerCollection.find(new Document("bookISBN", isbn))) {
+            for (Document doc : writerCollection.find(new Document("ISBN", isbn))) {
                 authors.add(new Author(
                     null,
-                    doc.getString("authorName"),
+                    doc.getString("name"),
                     null
                 ));
             }
@@ -72,8 +72,8 @@ public class WriterQuery implements WriterDAO {
     public List<String> getBooksByAuthor(@SuppressWarnings("exports") ObjectId authorName) throws BooksDbException {
         List<String> bookISBNs = new ArrayList<>();
         try {
-            for (Document doc : writerCollection.find(new Document("authorName", authorName.toString()))) {
-                bookISBNs.add(doc.getString("bookISBN"));
+            for (Document doc : writerCollection.find(new Document("name", authorName.toString()))) {
+                bookISBNs.add(doc.getString("ISBN"));
             }
         } catch (Exception e) {
             throw new BooksDbException("Error getting books for author", e);
