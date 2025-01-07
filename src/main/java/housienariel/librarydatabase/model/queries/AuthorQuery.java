@@ -41,9 +41,9 @@ public class AuthorQuery implements AuthorDAO {
         try {
             for (Document doc : authorCollection.find()) {
                 authors.add(new Author(
-                        doc.getObjectId("_id"), // Using ObjectId directly
+                        doc.getObjectId("_id"),
                         doc.getString("name"),
-                        doc.getDate("authorDob")
+                        doc.getDate("author_dob")
                 ));
             }
         } catch (Exception e) {
@@ -62,7 +62,7 @@ public class AuthorQuery implements AuthorDAO {
                 return new Author(
                         doc.getObjectId("_id"), // Using ObjectId directly
                         doc.getString("name"),
-                        doc.getDate("authorDob")
+                        doc.getDate("author_dob")
                 );
             }
         } catch (Exception e) {
@@ -76,7 +76,7 @@ public class AuthorQuery implements AuthorDAO {
         try {
             Document query = new Document("_id", author.getAuthorId()); // Assuming author.getAuthorId() returns ObjectId
             Document updatedDoc = new Document("name", author.getName())
-                    .append("authorDob", author.getAuthorDob());
+                    .append("author_dob", author.getAuthorDob());
             Document updateOperation = new Document("$set", updatedDoc);
             authorCollection.updateOne(query, updateOperation);
         } catch (Exception e) {
@@ -101,9 +101,9 @@ public class AuthorQuery implements AuthorDAO {
             Document query = new Document("name", new Document("$regex", namePattern).append("$options", "i"));
             for (Document doc : authorCollection.find(query)) {
                 authors.add(new Author(
-                        doc.getObjectId("_id"), 
+                        doc.getObjectId("_id"),
                         doc.getString("name"),
-                        doc.getDate("authorDob")
+                        doc.getDate("author_dob")
                 ));
             }
         } catch (Exception e) {

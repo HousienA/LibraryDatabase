@@ -29,8 +29,7 @@ public class GenreQuery implements GenreDAO {
     @Override
     public void addGenre(Genre genre) throws BooksDbException {
         try {
-            // Creating a MongoDB document for the genre
-            Document doc = new Document("genreName", genre.getGenreName());
+            Document doc = new Document("genre_name", genre.getGenreName());
             genreCollection.insertOne(doc);
         } catch (Exception e) {
             throw new BooksDbException("Error adding genre", e);
@@ -49,7 +48,7 @@ public class GenreQuery implements GenreDAO {
             for (Document doc : genreCollection.find()) {
                 genres.add(new Genre(
                     doc.getObjectId("_id"),
-                    doc.getString("genreName")
+                    doc.getString("genre_name")
                 ));
             }
         } catch (Exception e) {
