@@ -26,7 +26,7 @@ public class SearchController {
     @SuppressWarnings("unused")
     private void initialize() {
         setupTableView();
-        setupRatingFilter();
+        // setupRatingFilter();
     }
 
     public void injectDAOs(BookDAO bookDAO, GenreDAO genreDAO, WriterDAO writerDAO) {
@@ -105,7 +105,7 @@ public class SearchController {
             genreComboBox.getItems().addAll(genreLoadTask.getValue());
             genreComboBox.setPromptText("Select Genre");
 
-            // Set up display
+
             ListCell<Genre> cell = new ListCell<>() {
                 @Override
                 protected void updateItem(Genre genre, boolean empty) {

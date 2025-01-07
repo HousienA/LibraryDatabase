@@ -1,18 +1,19 @@
 package housienariel.librarydatabase.model.queries;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bson.Document;
+
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
-import org.bson.Document;
+
 import housienariel.librarydatabase.model.Book;
+import housienariel.librarydatabase.model.BooksDbException;
 import housienariel.librarydatabase.model.Genre;
 import housienariel.librarydatabase.model.Rating;
-import housienariel.librarydatabase.model.BooksDbException;
 import housienariel.librarydatabase.model.dao.BookDAO;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class BookQuery implements BookDAO {
     private final MongoCollection<Document> bookCollection;
@@ -26,8 +27,8 @@ public class BookQuery implements BookDAO {
     public void addBook(Book book) throws BooksDbException {
         try {
             Document doc = new Document("ISBN", book.getISBN())
-                .append("title", book.getTitle())
-                .append("genreId", book.getGenre().getGenreId());
+                    .append("title", book.getTitle())
+                    .append("genreId", book.getGenre().getGenreId());
             if (book.getRating() != null) {
                 doc.append("rating", book.getRating().getRatingValue());
             }
@@ -40,15 +41,16 @@ public class BookQuery implements BookDAO {
     @Override
     public Book getBookByISBN(String ISBN) throws BooksDbException {
         try {
-            Document doc = bookCollection.find(Filters.eq("ISBN", ISBN)).first();
+            Document query = new Document("ISBN", ISBN);
+            Document doc = bookCollection.find(query).first();
             if (doc != null) {
-                Genre genre = new Genre(doc.getInteger("genreId"), null);
+                Genre genre = new Genre(doc.getObjectId("genreId"), null);
                 Rating rating = doc.containsKey("rating") ? new Rating(null, doc.getInteger("rating")) : null;
                 return new Book(
-                    doc.getString("ISBN"),
-                    doc.getString("title"),
-                    genre,
-                    rating
+                        doc.getString("ISBN"),
+                        doc.getString("title"),
+                        genre,
+                        rating
                 );
             }
         } catch (Exception e) {
@@ -62,13 +64,13 @@ public class BookQuery implements BookDAO {
         List<Book> books = new ArrayList<>();
         try {
             for (Document doc : bookCollection.find()) {
-                Genre genre = new Genre(doc.getInteger("genreId"), null);
+                Genre genre = new Genre(doc.getObjectId("genreId"), null);
                 Rating rating = doc.containsKey("rating") ? new Rating(null, doc.getInteger("rating")) : null;
                 books.add(new Book(
-                    doc.getString("ISBN"),
-                    doc.getString("title"),
-                    genre,
-                    rating
+                        doc.getString("ISBN"),
+                        doc.getString("title"),
+                        genre,
+                        rating
                 ));
             }
         } catch (Exception e) {
@@ -80,12 +82,13 @@ public class BookQuery implements BookDAO {
     @Override
     public void updateBook(Book book) throws BooksDbException {
         try {
+            Document query = new Document("ISBN", book.getISBN());
             Document updatedDoc = new Document("title", book.getTitle())
-                .append("genreId", book.getGenre().getGenreId());
+                    .append("genreId", book.getGenre().getGenreId());  // Uses ObjectId correctly
             if (book.getRating() != null) {
                 updatedDoc.append("rating", book.getRating().getRatingValue());
             }
-            bookCollection.updateOne(Filters.eq("ISBN", book.getISBN()), new Document("$set", updatedDoc));
+            bookCollection.updateOne(query, new Document("$set", updatedDoc));
         } catch (Exception e) {
             throw new BooksDbException("Error updating book", e);
         }
@@ -94,7 +97,8 @@ public class BookQuery implements BookDAO {
     @Override
     public void deleteBook(String ISBN) throws BooksDbException {
         try {
-            bookCollection.deleteOne(Filters.eq("ISBN", ISBN));
+            Document query = new Document("ISBN", ISBN);
+            bookCollection.deleteOne(query);
         } catch (Exception e) {
             throw new BooksDbException("Error deleting book", e);
         }
@@ -104,19 +108,40 @@ public class BookQuery implements BookDAO {
     public List<Book> searchBooks(String searchTerm) throws BooksDbException {
         List<Book> books = new ArrayList<>();
         try {
-            for (Document doc : bookCollection.find(Filters.regex("title", searchTerm, "i"))) {
-                Genre genre = new Genre(doc.getInteger("genreId"), null);
+            Document query = new Document("title", new Document("$regex", searchTerm).append("$options", "i"));
+            for (Document doc : bookCollection.find(query)) {
+                Genre genre = new Genre(doc.getObjectId("genreId"), null);
                 Rating rating = doc.containsKey("rating") ? new Rating(null, doc.getInteger("rating")) : null;
                 books.add(new Book(
-                    doc.getString("ISBN"),
-                    doc.getString("title"),
-                    genre,
-                    rating
+                        doc.getString("ISBN"),
+                        doc.getString("title"),
+                        genre,
+                        rating
                 ));
             }
         } catch (Exception e) {
             throw new BooksDbException("Error searching for books", e);
         }
         return books;
+    }
+
+    @Override
+    public void searchBooksByRating(int rating) throws BooksDbException {
+        List<Book> books = new ArrayList<>();
+        try {
+            Document query = new Document("rating", rating);
+            for (Document doc : bookCollection.find(query)) {
+                Genre genre = new Genre(doc.getObjectId("genreId"), null);
+                Rating ratingObj = doc.containsKey("rating") ? new Rating(null, doc.getInteger("rating")) : null;
+                books.add(new Book(
+                        doc.getString("ISBN"),
+                        doc.getString("title"),
+                        genre,
+                        ratingObj
+                ));
+            }
+        } catch (Exception e) {
+            throw new BooksDbException("Error searching for books by rating", e);
+        }
     }
 }
