@@ -1,9 +1,9 @@
 package housienariel.librarydatabase.model.dao;
 
-import housienariel.librarydatabase.model.Book;
-import housienariel.librarydatabase.model.Rating;
-import housienariel.librarydatabase.model.BooksDbException;
 import java.util.List;
+
+import housienariel.librarydatabase.model.Book;
+import housienariel.librarydatabase.model.BooksDbException;
 
 public interface BookDAO {
 
@@ -11,7 +11,7 @@ public interface BookDAO {
     List<Book> getAllBooks() throws BooksDbException;
     Book getBookByISBN(String ISBN) throws BooksDbException;
     void updateBook(Book book) throws BooksDbException;
-    void addRatingToBook(String bookISBN, Rating rating) throws BooksDbException;
     List<Book> searchBooks(String searchTerm) throws BooksDbException;
-    List<Book> searchBooksByRating(int rating) throws BooksDbException;
+    void deleteBook(String ISBN) throws BooksDbException;
+
 }

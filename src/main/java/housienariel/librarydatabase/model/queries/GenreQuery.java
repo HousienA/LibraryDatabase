@@ -1,15 +1,17 @@
 package housienariel.librarydatabase.model.queries;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bson.Document;
+
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
-import org.bson.Document;
-import housienariel.librarydatabase.model.Genre;
-import housienariel.librarydatabase.model.BooksDbException;
-import housienariel.librarydatabase.model.dao.GenreDAO;
 
-import java.util.ArrayList;
-import java.util.List;
+import housienariel.librarydatabase.model.BooksDbException;
+import housienariel.librarydatabase.model.Genre;
+import housienariel.librarydatabase.model.dao.GenreDAO;
 
 public class GenreQuery implements GenreDAO {
     private final MongoCollection<Document> genreCollection;
@@ -46,7 +48,7 @@ public class GenreQuery implements GenreDAO {
         try {
             for (Document doc : genreCollection.find()) {
                 genres.add(new Genre(
-                    doc.getObjectId("_id").toString(),
+                    doc.getObjectId("_id"),
                     doc.getString("genreName")
                 ));
             }
