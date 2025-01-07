@@ -3,7 +3,6 @@ package housienariel.librarydatabase.model.queries;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import housienariel.librarydatabase.model.Genre;
 import housienariel.librarydatabase.model.BooksDbException;
@@ -15,7 +14,6 @@ import java.util.List;
 public class GenreQuery implements GenreDAO {
     private final MongoCollection<Document> genreCollection;
 
-    // MongoDB client initialization
     public GenreQuery() {
         MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
         genreCollection = mongoClient.getDatabase("library").getCollection("genres");
@@ -58,17 +56,4 @@ public class GenreQuery implements GenreDAO {
         return genres;
     }
 
-    /**
-     * Delete a genre by its ID
-     * @param genreId the ID of the genre to delete
-     * @throws BooksDbException if an error occurs while deleting the genre
-     */
-    @Override
-    public void deleteGenre(String genreId) throws BooksDbException {
-        try {
-            genreCollection.deleteOne(Filters.eq("_id", genreId));
-        } catch (Exception e) {
-            throw new BooksDbException("Error deleting genre", e);
-        }
-    }
 }

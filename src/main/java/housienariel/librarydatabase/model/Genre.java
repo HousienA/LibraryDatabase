@@ -1,21 +1,22 @@
 package housienariel.librarydatabase.model;
 
+import org.bson.types.ObjectId;
 
 public class Genre {
 
-    private Integer genreId;
+    private ObjectId genreId;
     private String genreName;
 
-    public Genre(Integer genreId, String genreName) {
-        this.genreId = genreId;
+    public Genre(String genreId, String genreName) {
+        this.genreId = new ObjectId(genreId);
         this.genreName = genreName;
     }
 
-    public Integer getGenreId() {
+    public ObjectId getGenreId() {
         return genreId;
     }
 
-    public void setGenreId(Integer genreId) {
+    public void setGenreId(ObjectId genreId) {
         this.genreId = genreId;
     }
 

@@ -352,7 +352,7 @@ public class BookController implements Initializable {
 
     private void updateSelectedAuthorsListView() {
         selectedAuthorsListView.getItems().clear();
-        selectedAuthorsListView.getItems().addAll(selectedAuthors);
+        selectedAuthorsListView.getItems().addAll(selectedAuthors); 
     }
 
     private void clearFields() {
