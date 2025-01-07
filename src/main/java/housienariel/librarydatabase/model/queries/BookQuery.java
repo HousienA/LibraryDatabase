@@ -125,8 +125,8 @@ public class BookQuery implements BookDAO {
         return books;
     }
 
-    @Override
-    public void searchBooksByRating(int rating) throws BooksDbException {
+        @Override
+    public List<Book> searchBooksByRating(int rating) throws BooksDbException {
         List<Book> books = new ArrayList<>();
         try {
             Document query = new Document("rating", rating);
@@ -143,5 +143,7 @@ public class BookQuery implements BookDAO {
         } catch (Exception e) {
             throw new BooksDbException("Error searching for books by rating", e);
         }
-    }
+        return books;
+}
+
 }
