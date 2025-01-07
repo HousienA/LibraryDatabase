@@ -17,6 +17,11 @@ public class Book {
         this.authors = new ArrayList<>();
     }
 
+    public Book(String ISBN, String title, Genre genre, Rating rating) {
+        this(ISBN, title, genre);
+        this.rating = rating;
+        this.authors = new ArrayList<>();
+    }
     public String getISBN() {
         return ISBN;
     }
