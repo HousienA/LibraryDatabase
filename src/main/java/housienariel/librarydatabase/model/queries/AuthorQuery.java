@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AuthorQuery implements AuthorDAO {
+    
     private final MongoCollection<Document> authorCollection;
 
     public AuthorQuery() {

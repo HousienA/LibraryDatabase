@@ -1,7 +1,6 @@
 package housienariel.librarydatabase.model.dao;
 
 import housienariel.librarydatabase.model.Genre;
-import org.springframework.dao.DataAccessException;
 import housienariel.librarydatabase.model.BooksDbException;
 import java.util.List;
 

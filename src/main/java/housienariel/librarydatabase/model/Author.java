@@ -1,13 +1,10 @@
 package housienariel.librarydatabase.model;
 
 import org.bson.types.ObjectId;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.Date;
 
-@Document(collection = "Author")
 public class Author {
-    @Id
+
     private ObjectId authorId;
     private String name;
     private Date authorDob;

@@ -3,8 +3,6 @@ package housienariel.librarydatabase.model.dao;
 import housienariel.librarydatabase.model.Book;
 import housienariel.librarydatabase.model.Rating;
 import housienariel.librarydatabase.model.BooksDbException;
-import org.springframework.dao.DataAccessException;
-
 import java.util.List;
 
 public interface BookDAO {

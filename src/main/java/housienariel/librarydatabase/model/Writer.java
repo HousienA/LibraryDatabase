@@ -1,9 +1,5 @@
 package housienariel.librarydatabase.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-@Document(collection = "Writer")
 public class Writer {
 
     private String bookISBN;
