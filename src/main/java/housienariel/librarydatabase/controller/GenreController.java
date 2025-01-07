@@ -43,7 +43,7 @@ public class GenreController implements Initializable {
         Task<Void> addGenreTask = new Task<>() {
             @Override
             protected Void call() throws BooksDbException {
-                Genre newGenre = new Genre(0, genreName);
+                Genre newGenre = new Genre(genreName);
                 genreDAO.addGenre(newGenre);
                 return null;
             }
@@ -67,6 +67,7 @@ public class GenreController implements Initializable {
         thread.setDaemon(true);
         thread.start();
     }
+
 
     private void setupTableView() {
         // Genre ID Column

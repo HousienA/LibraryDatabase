@@ -51,7 +51,7 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public Author getAuthorById(ObjectId authorId) throws BooksDbException {
+    public Author getAuthorById(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
         try {
             Document query = new Document("_id", authorId);
             Document doc = authorCollection.find(query).first();
@@ -83,7 +83,7 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public void deleteAuthor(ObjectId authorId) throws BooksDbException {
+    public void deleteAuthor(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
         try {
             Document query = new Document("_id", authorId);
             authorCollection.deleteOne(query);

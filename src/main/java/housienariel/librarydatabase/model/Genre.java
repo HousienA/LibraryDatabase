@@ -7,16 +7,23 @@ public class Genre {
     private ObjectId genreId;
     private String genreName;
 
-    public Genre(String genreId, String genreName) {
-        this.genreId = new ObjectId(genreId);
+    // Constructor for when you already have an ObjectId
+    public Genre(@SuppressWarnings("exports") ObjectId genreId, String genreName) {
+        this.genreId = genreId;
         this.genreName = genreName;
     }
 
+    public Genre(String genreName) {
+        this.genreId = new ObjectId();
+        this.genreName = genreName;
+    }
+
+    @SuppressWarnings("exports")
     public ObjectId getGenreId() {
         return genreId;
     }
 
-    public void setGenreId(ObjectId genreId) {
+    public void setGenreId(@SuppressWarnings("exports") ObjectId genreId) {
         this.genreId = genreId;
     }
 
