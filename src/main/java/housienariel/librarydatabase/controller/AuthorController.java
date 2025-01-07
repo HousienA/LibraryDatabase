@@ -24,7 +24,8 @@ public class AuthorController implements Initializable {
     @FXML private TableView<Author> authorTableView;
     @FXML private Button addButton;
     @FXML private Button updateButton;
-    @FXML private Button clearButton;
+    @FXML@SuppressWarnings("unused")
+ private Button clearButton;
     @FXML private TextField searchAuthorField;
 
     private AuthorDAO authorDAO;
@@ -47,6 +48,7 @@ public class AuthorController implements Initializable {
         loadAuthors();
     }
 
+    @SuppressWarnings("unused")
     @FXML
     private void handleAddAuthor() {
         if (!validateInput()) {
@@ -78,6 +80,7 @@ public class AuthorController implements Initializable {
         new Thread(addAuthorTask).start();
     }
 
+    @SuppressWarnings("unused")
     @FXML
     private void handleUpdateAuthor() {
         if (selectedAuthor == null) {
@@ -115,6 +118,7 @@ public class AuthorController implements Initializable {
     }
 
     @FXML
+    @SuppressWarnings("unused")
     private void handleClear() {
         clearFields();
         selectedAuthor = null;
@@ -122,6 +126,7 @@ public class AuthorController implements Initializable {
         addButton.setDisable(false);
     }
 
+    @SuppressWarnings("unused")
     @FXML
     private void handleSearchAuthor() {
         String searchTerm = searchAuthorField.getText().trim();
@@ -148,6 +153,7 @@ public class AuthorController implements Initializable {
         new Thread(searchAuthorsTask).start();
     }
 
+    @SuppressWarnings("unchecked")
     private void setupTableView() {
         TableColumn<Author, String> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getAuthorId())));
@@ -190,6 +196,7 @@ public class AuthorController implements Initializable {
         authorTableView.getColumns().add(booksCol);
     }
 
+    @SuppressWarnings("unused")
     private void setupSelectionListener() {
         authorTableView.getSelectionModel().selectedItemProperty().addListener(
             (obs, oldSelection, newSelection) -> {
@@ -218,6 +225,7 @@ public class AuthorController implements Initializable {
         return true;
     }
 
+    @SuppressWarnings("unused")
     private void loadAuthors() {
         Task<List<Author>> loadAuthorsTask = new Task<>() {
             @Override

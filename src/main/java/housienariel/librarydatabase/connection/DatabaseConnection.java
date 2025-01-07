@@ -10,6 +10,7 @@ public class DatabaseConnection {
     private static MongoClient mongoClient;
     private static MongoDatabase database;
 
+    @SuppressWarnings("exports")
     public static MongoDatabase getConnection() {
         if (mongoClient == null) {
             mongoClient = MongoClients.create(URI);

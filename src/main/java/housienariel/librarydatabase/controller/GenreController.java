@@ -16,7 +16,8 @@ import java.util.ResourceBundle;
 public class GenreController implements Initializable {
     @FXML private TextField genreNameField;
     @FXML private TableView<Genre> genreTableView;
-    @FXML private Button addGenreButton;
+    @FXML@SuppressWarnings("unused")
+ private Button addGenreButton;
 
     private GenreDAO genreDAO;
 
@@ -32,6 +33,7 @@ public class GenreController implements Initializable {
     }
 
     @FXML
+    @SuppressWarnings("unused")
     private void handleAddGenre() {
         String genreName = genreNameField.getText().trim();
 
@@ -69,6 +71,7 @@ public class GenreController implements Initializable {
     }
 
 
+    @SuppressWarnings("unchecked")
     private void setupTableView() {
         // Genre ID Column
         TableColumn<Genre, Integer> idColumn = new TableColumn<>("ID");
@@ -81,6 +84,7 @@ public class GenreController implements Initializable {
         genreTableView.getColumns().addAll(idColumn, nameColumn);
     }
 
+    @SuppressWarnings("unused")
     private void loadGenres() {
         Task<List<Genre>> loadGenresTask = new Task<>() {
             @Override

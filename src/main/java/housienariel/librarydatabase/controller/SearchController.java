@@ -92,6 +92,7 @@ public class SearchController {
         });
     }
 
+    @SuppressWarnings("unused")
     private void setupGenreFilter() {
         Task<List<Genre>> genreLoadTask = new Task<>() {
             @Override
@@ -136,6 +137,7 @@ public class SearchController {
         new Thread(genreLoadTask).start();
     }
 
+    @SuppressWarnings("unused")
     private void performSearch(Supplier<Task<List<Book>>> taskSupplier) {
         Task<List<Book>> task = taskSupplier.get();
 
@@ -152,6 +154,7 @@ public class SearchController {
     }
 
     @FXML
+    @SuppressWarnings("unused")
     private void handleSearch() {
         String searchTerm = searchField.getText().trim();
         performSearch(() -> new Task<>() {
@@ -162,6 +165,7 @@ public class SearchController {
         });
     }
 
+    @SuppressWarnings("unused")
     @FXML
     private void handleRatingSearch() {
         Integer rating = ratingFilterBox.getValue();
@@ -202,6 +206,7 @@ public class SearchController {
     }
 
     @FXML
+    @SuppressWarnings("unused")
     private void handleClearSearch() {
         searchField.clear();
         ratingFilterBox.setValue(null);

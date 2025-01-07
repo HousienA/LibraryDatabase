@@ -69,7 +69,7 @@ public class WriterQuery implements WriterDAO {
      * @throws BooksDbException if an error occurs while retrieving books for the author
      */
     @Override
-    public List<String> getBooksByAuthor(ObjectId authorName) throws BooksDbException {
+    public List<String> getBooksByAuthor(@SuppressWarnings("exports") ObjectId authorName) throws BooksDbException {
         List<String> bookISBNs = new ArrayList<>();
         try {
             for (Document doc : writerCollection.find(new Document("authorName", authorName.toString()))) {
