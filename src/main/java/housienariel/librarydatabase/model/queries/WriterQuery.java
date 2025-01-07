@@ -3,14 +3,16 @@ package housienariel.librarydatabase.model.queries;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
 import org.bson.Document;
+
 import housienariel.librarydatabase.model.Author;
 import housienariel.librarydatabase.model.BooksDbException;
 import housienariel.librarydatabase.model.dao.WriterDAO;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.bson.types.ObjectId;
 
 public class WriterQuery implements WriterDAO {
     private final MongoCollection<Document> writerCollection;
@@ -47,7 +49,7 @@ public class WriterQuery implements WriterDAO {
     public List<Author> getAuthorsForBook(String isbn) throws BooksDbException {
         List<Author> authors = new ArrayList<>();
         try {
-            for (Document doc : writerCollection.find(Filters.eq("bookISBN", isbn))) {
+            for (Document doc : writerCollection.find(new Document("bookISBN", isbn))) {
                 authors.add(new Author(
                     null,
                     doc.getString("authorName"),
@@ -67,11 +69,10 @@ public class WriterQuery implements WriterDAO {
      * @throws BooksDbException if an error occurs while retrieving books for the author
      */
     @Override
-    public List<String> getBooksByAuthor(String authorName) throws BooksDbException {
+    public List<String> getBooksByAuthor(ObjectId authorName) throws BooksDbException {
         List<String> bookISBNs = new ArrayList<>();
         try {
-
-            for (Document doc : writerCollection.find(Filters.eq("authorName", authorName))) {
+            for (Document doc : writerCollection.find(new Document("authorName", authorName.toString()))) {
                 bookISBNs.add(doc.getString("bookISBN"));
             }
         } catch (Exception e) {
