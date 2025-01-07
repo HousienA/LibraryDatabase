@@ -32,8 +32,8 @@ public class AuthorController implements Initializable{
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        setupTableView();
-        setupSelectionListener();
+        // setupTableView();
+        // setupSelectionListener();
         updateButton.setDisable(true);
     }
 

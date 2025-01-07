@@ -17,7 +17,7 @@ public class WriterQuery implements WriterDAO {
 
     public WriterQuery() {
         MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
-        writerCollection = mongoClient.getDatabase("library").getCollection("writers");
+        writerCollection = mongoClient.getDatabase("Library").getCollection("Writer");
     }
 
     /**

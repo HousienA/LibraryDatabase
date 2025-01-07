@@ -3,7 +3,6 @@ package housienariel.librarydatabase.model;
 import java.util.ArrayList;
 import java.util.List;
 
-@Document(collection = "Book")
 public class Book {
     private String ISBN;
     private String title;
@@ -75,11 +74,4 @@ public class Book {
                 '}';
     }
 
-    // Override equals() for proper object comparison
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Book book)) return false;
-        return ISBN.equals(book.ISBN);
-    }
 }
