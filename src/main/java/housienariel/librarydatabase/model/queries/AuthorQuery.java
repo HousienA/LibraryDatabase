@@ -39,7 +39,7 @@ public class AuthorQuery implements AuthorDAO {
         try {
             for (Document doc : authorCollection.find()) {
                 authors.add(new Author(
-                        doc.getObjectId("_id").toString(),
+                        doc.getObjectId("_id"), // Using ObjectId directly
                         doc.getString("name"),
                         doc.getDate("authorDob")
                 ));
@@ -51,21 +51,18 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public Author getAuthorById(String authorId) throws BooksDbException {
+    public Author getAuthorById(ObjectId authorId) throws BooksDbException {
         try {
-            ObjectId objectId = new ObjectId(authorId);
-            Document query = new Document("_id", objectId);
+            Document query = new Document("_id", authorId);
             Document doc = authorCollection.find(query).first();
 
             if (doc != null) {
                 return new Author(
-                        doc.getObjectId("_id").toString(),
+                        doc.getObjectId("_id"), // Using ObjectId directly
                         doc.getString("name"),
                         doc.getDate("authorDob")
                 );
             }
-        } catch (IllegalArgumentException e) {
-            throw new BooksDbException("Invalid author ID format: " + authorId, e);
         } catch (Exception e) {
             throw new BooksDbException("Error retrieving author by ID: " + e.getMessage(), e);
         }
@@ -75,27 +72,21 @@ public class AuthorQuery implements AuthorDAO {
     @Override
     public void updateAuthor(Author author) throws BooksDbException {
         try {
-            ObjectId objectId = new ObjectId(author.getAuthorId());
-            Document query = new Document("_id", objectId);
+            Document query = new Document("_id", author.getAuthorId()); // Assuming author.getAuthorId() returns ObjectId
             Document updatedDoc = new Document("name", author.getName())
                     .append("authorDob", author.getAuthorDob());
             Document updateOperation = new Document("$set", updatedDoc);
             authorCollection.updateOne(query, updateOperation);
-        } catch (IllegalArgumentException e) {
-            throw new BooksDbException("Invalid author ID format: " + author.getAuthorId(), e);
         } catch (Exception e) {
             throw new BooksDbException("Error updating author: " + e.getMessage(), e);
         }
     }
 
     @Override
-    public void deleteAuthor(String authorId) throws BooksDbException {
+    public void deleteAuthor(ObjectId authorId) throws BooksDbException {
         try {
-            ObjectId objectId = new ObjectId(authorId);
-            Document query = new Document("_id", objectId);
+            Document query = new Document("_id", authorId);
             authorCollection.deleteOne(query);
-        } catch (IllegalArgumentException e) {
-            throw new BooksDbException("Invalid author ID format: " + authorId, e);
         } catch (Exception e) {
             throw new BooksDbException("Error deleting author: " + e.getMessage(), e);
         }
@@ -108,7 +99,7 @@ public class AuthorQuery implements AuthorDAO {
             Document query = new Document("name", new Document("$regex", namePattern).append("$options", "i"));
             for (Document doc : authorCollection.find(query)) {
                 authors.add(new Author(
-                        doc.getObjectId("_id").toString(),
+                        doc.getObjectId("_id"), // Using ObjectId directly
                         doc.getString("name"),
                         doc.getDate("authorDob")
                 ));
