@@ -59,6 +59,7 @@ public class BookQuery implements BookDAO {
         return null;
     }
 
+    // error message 
     @Override
     public List<Book> getAllBooks() throws BooksDbException {
         List<Book> books = new ArrayList<>();
@@ -84,7 +85,7 @@ public class BookQuery implements BookDAO {
         try {
             Document query = new Document("ISBN", book.getISBN());
             Document updatedDoc = new Document("title", book.getTitle())
-                    .append("genre_id", book.getGenre().getGenreId());  // Uses ObjectId correctly
+                    .append("genre_id", book.getGenre().getGenreId());
             if (book.getRating() != null) {
                 updatedDoc.append("rating_id", book.getRating().getRatingValue());
             }
