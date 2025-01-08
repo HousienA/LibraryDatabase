@@ -33,7 +33,6 @@ public class AuthorQuery implements AuthorDAO {
             Document doc = new Document("name", author.getName())
                     .append("author_dob", author.getAuthorDob());
             authorCollection.insertOne(doc);
-            // Set the generated ObjectId back to the Author object
             author.setAuthorId(doc.getObjectId("_id"));
         } catch (Exception e) {
             throw new BooksDbException("Error adding author: " + e.getMessage(), e);
@@ -92,7 +91,6 @@ public class AuthorQuery implements AuthorDAO {
     @Override
     public void deleteAuthor(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
         try {
-            // First, remove this author from all books that reference it
             Document update = new Document("$pull",
                 new Document("authorIds", authorId));
             bookCollection.updateMany(
@@ -100,7 +98,6 @@ public class AuthorQuery implements AuthorDAO {
                 update
             );
 
-            // Then delete the author
             Document query = new Document("_id", authorId);
             authorCollection.deleteOne(query);
         } catch (Exception e) {
@@ -134,7 +131,6 @@ public class AuthorQuery implements AuthorDAO {
             List<String> bookIsbns = new ArrayList<>();
             Document query = new Document("_id", new Document("$in", Collections.singletonList(authorId)));
 
-            // Iterate over the results and collect the ISBNs
             for (Document doc : bookCollection.find(query)) {
                 bookIsbns.add(doc.getString("ISBN"));
             }
