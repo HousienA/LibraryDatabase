@@ -58,7 +58,7 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public Author getAuthorById(ObjectId authorId) throws BooksDbException {
+    public Author getAuthorById(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
         try {
             Document query = new Document("_id", authorId);
             Document doc = authorCollection.find(query).first();
@@ -90,7 +90,7 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public void deleteAuthor(ObjectId authorId) throws BooksDbException {
+    public void deleteAuthor(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
         try {
             // First, remove this author from all books that reference it
             Document update = new Document("$pull",
@@ -129,7 +129,7 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public List<String> getAuthorBooks(ObjectId authorId) throws BooksDbException {
+    public List<String> getAuthorBooks(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
         try {
             List<String> bookIsbns = new ArrayList<>();
             Document query = new Document("_id", new Document("$in", Collections.singletonList(authorId)));

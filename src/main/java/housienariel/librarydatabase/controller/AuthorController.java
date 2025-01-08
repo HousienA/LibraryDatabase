@@ -1,15 +1,5 @@
 package housienariel.librarydatabase.controller;
 
-import housienariel.librarydatabase.model.*;
-import housienariel.librarydatabase.model.dao.*;
-import javafx.application.Platform;
-import javafx.concurrent.Task;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.beans.property.SimpleStringProperty;
-
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -17,7 +7,24 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
-import org.bson.types.ObjectId;
+
+import housienariel.librarydatabase.model.Author;
+import housienariel.librarydatabase.model.Book;
+import housienariel.librarydatabase.model.BooksDbException;
+import housienariel.librarydatabase.model.dao.AuthorDAO;
+import housienariel.librarydatabase.model.dao.BookDAO;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.concurrent.Task;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 
 public class AuthorController implements Initializable {
     @FXML private TextField nameField;
@@ -25,7 +32,8 @@ public class AuthorController implements Initializable {
     @FXML private TableView<Author> authorTableView;
     @FXML private Button addButton;
     @FXML private Button updateButton;
-    @FXML private Button clearButton;
+    @FXML@SuppressWarnings("unused")
+    private Button clearButton;
     @FXML private TextField searchAuthorField;
 
     private AuthorDAO authorDAO;
@@ -47,6 +55,7 @@ public class AuthorController implements Initializable {
     }
 
     @FXML
+    @SuppressWarnings("unused")
     private void handleAddAuthor() {
         if (!validateInput()) {
             return;
@@ -77,6 +86,7 @@ public class AuthorController implements Initializable {
         new Thread(addAuthorTask).start();
     }
 
+    @SuppressWarnings("unused")
     @FXML
     private void handleUpdateAuthor() {
         if (selectedAuthor == null) {
@@ -114,6 +124,7 @@ public class AuthorController implements Initializable {
     }
 
     @FXML
+    @SuppressWarnings("unused")
     private void handleClear() {
         clearFields();
         selectedAuthor = null;
@@ -121,6 +132,7 @@ public class AuthorController implements Initializable {
         addButton.setDisable(false);
     }
 
+    @SuppressWarnings("unused")
     @FXML
     private void handleSearchAuthor() {
         String searchTerm = searchAuthorField.getText().trim();
@@ -191,6 +203,7 @@ public class AuthorController implements Initializable {
         authorTableView.getColumns().add(booksCol);
     }
 
+    @SuppressWarnings("unused")
     private void setupSelectionListener() {
         authorTableView.getSelectionModel().selectedItemProperty().addListener(
             (obs, oldSelection, newSelection) -> {
@@ -220,6 +233,7 @@ public class AuthorController implements Initializable {
         return true;
     }
 
+    @SuppressWarnings("unused")
     private void loadAuthors() {
         Task<List<Author>> loadAuthorsTask = new Task<>() {
             @Override
