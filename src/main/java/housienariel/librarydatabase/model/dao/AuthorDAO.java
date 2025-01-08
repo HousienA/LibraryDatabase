@@ -1,11 +1,11 @@
 package housienariel.librarydatabase.model.dao;
 
-import housienariel.librarydatabase.model.Author;
-import housienariel.librarydatabase.model.BooksDbException;
-
 import java.util.List;
 
 import org.bson.types.ObjectId;
+
+import housienariel.librarydatabase.model.Author;
+import housienariel.librarydatabase.model.BooksDbException;
 
 public interface AuthorDAO {
 
@@ -15,4 +15,6 @@ public interface AuthorDAO {
     void updateAuthor(Author author) throws BooksDbException;
     void deleteAuthor(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException;
     List<Author> searchAuthorsByName(String namePattern) throws BooksDbException;
+    List<String> getAuthorBooks(ObjectId authorId) throws BooksDbException;
+    void close();
 }

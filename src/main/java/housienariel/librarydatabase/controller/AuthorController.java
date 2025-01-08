@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
+import org.bson.types.ObjectId;
 
 public class AuthorController implements Initializable {
     @FXML private TextField nameField;
@@ -24,13 +25,11 @@ public class AuthorController implements Initializable {
     @FXML private TableView<Author> authorTableView;
     @FXML private Button addButton;
     @FXML private Button updateButton;
-    @FXML@SuppressWarnings("unused")
- private Button clearButton;
+    @FXML private Button clearButton;
     @FXML private TextField searchAuthorField;
 
     private AuthorDAO authorDAO;
     private Author selectedAuthor;
-    private WriterDAO writerDAO;
     private BookDAO bookDAO;
 
     @Override
@@ -40,15 +39,13 @@ public class AuthorController implements Initializable {
         setupSelectionListener();
     }
 
-    public void injectDAOs(AuthorDAO authorDAO, WriterDAO writerDAO, BookDAO bookDAO) {
+    public void injectDAOs(AuthorDAO authorDAO, BookDAO bookDAO) {
         this.authorDAO = authorDAO;
-        this.writerDAO = writerDAO;
         this.bookDAO = bookDAO;
         setupBooksColumn();
         loadAuthors();
     }
 
-    @SuppressWarnings("unused")
     @FXML
     private void handleAddAuthor() {
         if (!validateInput()) {
@@ -80,7 +77,6 @@ public class AuthorController implements Initializable {
         new Thread(addAuthorTask).start();
     }
 
-    @SuppressWarnings("unused")
     @FXML
     private void handleUpdateAuthor() {
         if (selectedAuthor == null) {
@@ -118,7 +114,6 @@ public class AuthorController implements Initializable {
     }
 
     @FXML
-    @SuppressWarnings("unused")
     private void handleClear() {
         clearFields();
         selectedAuthor = null;
@@ -126,7 +121,6 @@ public class AuthorController implements Initializable {
         addButton.setDisable(false);
     }
 
-    @SuppressWarnings("unused")
     @FXML
     private void handleSearchAuthor() {
         String searchTerm = searchAuthorField.getText().trim();
@@ -156,7 +150,8 @@ public class AuthorController implements Initializable {
     @SuppressWarnings("unchecked")
     private void setupTableView() {
         TableColumn<Author, String> idCol = new TableColumn<>("ID");
-        idCol.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getAuthorId())));
+        idCol.setCellValueFactory(data -> new SimpleStringProperty(
+            data.getValue().getAuthorId() != null ? data.getValue().getAuthorId().toString() : ""));
 
         TableColumn<Author, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -179,7 +174,7 @@ public class AuthorController implements Initializable {
         booksCol.setCellValueFactory(data -> {
             Author author = data.getValue();
             try {
-                List<String> bookISBNs = writerDAO.getBooksByAuthor(author.getAuthorId());
+                List<String> bookISBNs = authorDAO.getAuthorBooks(author.getAuthorId());
                 List<String> bookTitles = new ArrayList<>();
                 for (String isbn : bookISBNs) {
                     Book book = bookDAO.getBookByISBN(isbn);
@@ -196,14 +191,14 @@ public class AuthorController implements Initializable {
         authorTableView.getColumns().add(booksCol);
     }
 
-    @SuppressWarnings("unused")
     private void setupSelectionListener() {
         authorTableView.getSelectionModel().selectedItemProperty().addListener(
             (obs, oldSelection, newSelection) -> {
                 if (newSelection != null) {
                     selectedAuthor = newSelection;
                     nameField.setText(newSelection.getName());
-                    dobPicker.setValue(newSelection.getAuthorDob().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+                    dobPicker.setValue(newSelection.getAuthorDob().toInstant()
+                        .atZone(ZoneId.systemDefault()).toLocalDate());
                     updateButton.setDisable(false);
                     addButton.setDisable(true);
                 }
@@ -225,7 +220,6 @@ public class AuthorController implements Initializable {
         return true;
     }
 
-    @SuppressWarnings("unused")
     private void loadAuthors() {
         Task<List<Author>> loadAuthorsTask = new Task<>() {
             @Override

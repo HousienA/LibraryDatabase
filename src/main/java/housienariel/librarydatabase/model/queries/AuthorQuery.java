@@ -1,6 +1,7 @@
 package housienariel.librarydatabase.model.queries;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
@@ -18,10 +19,12 @@ public class AuthorQuery implements AuthorDAO {
 
     private final MongoClient mongoClient;
     private final MongoCollection<Document> authorCollection;
+    private final MongoCollection<Document> bookCollection;
 
     public AuthorQuery() {
         mongoClient = MongoClients.create("mongodb://localhost:27017");
         authorCollection = mongoClient.getDatabase("Library").getCollection("Author");
+        bookCollection = mongoClient.getDatabase("Library").getCollection("Book");
     }
 
     @Override
@@ -30,6 +33,8 @@ public class AuthorQuery implements AuthorDAO {
             Document doc = new Document("name", author.getName())
                     .append("author_dob", author.getAuthorDob());
             authorCollection.insertOne(doc);
+            // Set the generated ObjectId back to the Author object
+            author.setAuthorId(doc.getObjectId("_id"));
         } catch (Exception e) {
             throw new BooksDbException("Error adding author: " + e.getMessage(), e);
         }
@@ -53,14 +58,14 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public Author getAuthorById(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
+    public Author getAuthorById(ObjectId authorId) throws BooksDbException {
         try {
             Document query = new Document("_id", authorId);
             Document doc = authorCollection.find(query).first();
 
             if (doc != null) {
                 return new Author(
-                        doc.getObjectId("_id"), 
+                        doc.getObjectId("_id"),
                         doc.getString("name"),
                         doc.getDate("author_dob")
                 );
@@ -85,8 +90,17 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public void deleteAuthor(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
+    public void deleteAuthor(ObjectId authorId) throws BooksDbException {
         try {
+            // First, remove this author from all books that reference it
+            Document update = new Document("$pull",
+                new Document("authorIds", authorId));
+            bookCollection.updateMany(
+                new Document("authorIds", authorId),
+                update
+            );
+
+            // Then delete the author
             Document query = new Document("_id", authorId);
             authorCollection.deleteOne(query);
         } catch (Exception e) {
@@ -98,7 +112,9 @@ public class AuthorQuery implements AuthorDAO {
     public List<Author> searchAuthorsByName(String namePattern) throws BooksDbException {
         List<Author> authors = new ArrayList<>();
         try {
-            Document query = new Document("name", new Document("$regex", namePattern).append("$options", "i"));
+            Document query = new Document("name",
+                new Document("$regex", namePattern)
+                    .append("$options", "i"));
             for (Document doc : authorCollection.find(query)) {
                 authors.add(new Author(
                         doc.getObjectId("_id"),
@@ -112,7 +128,27 @@ public class AuthorQuery implements AuthorDAO {
         return authors;
     }
 
+    @Override
+    public List<String> getAuthorBooks(ObjectId authorId) throws BooksDbException {
+        try {
+            List<String> bookIsbns = new ArrayList<>();
+            Document query = new Document("_id", new Document("$in", Collections.singletonList(authorId)));
+
+            // Iterate over the results and collect the ISBNs
+            for (Document doc : bookCollection.find(query)) {
+                bookIsbns.add(doc.getString("ISBN"));
+            }
+            return bookIsbns;
+        } catch (Exception e) {
+            throw new BooksDbException("Error getting author's books: " + e.getMessage(), e);
+        }
+    }
+
+
+    @Override
     public void close() {
-        mongoClient.close();
+        if (mongoClient != null) {
+            mongoClient.close();
+        }
     }
 }

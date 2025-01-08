@@ -14,5 +14,8 @@ public interface BookDAO {
     List<Book> searchBooks(String searchTerm) throws BooksDbException;
     void deleteBook(String ISBN) throws BooksDbException;
     List<Book> searchBooksByRating(int rating) throws BooksDbException;
+    void addAuthorToBook(String isbn, int authorId) throws BooksDbException;
+    void removeAuthorFromBook(String isbn, int authorId) throws BooksDbException;
+    List<Integer> getBookAuthors(String isbn) throws BooksDbException;
 
 }

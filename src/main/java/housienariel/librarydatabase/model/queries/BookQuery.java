@@ -59,7 +59,6 @@ public class BookQuery implements BookDAO {
         return null;
     }
 
-    // error
     @Override
     public List<Book> getAllBooks() throws BooksDbException {
         List<Book> books = new ArrayList<>();
@@ -126,7 +125,7 @@ public class BookQuery implements BookDAO {
         return books;
     }
 
-        @Override
+    @Override
     public List<Book> searchBooksByRating(int rating) throws BooksDbException {
         List<Book> books = new ArrayList<>();
         try {
@@ -145,6 +144,41 @@ public class BookQuery implements BookDAO {
             throw new BooksDbException("Error searching for books by rating", e);
         }
         return books;
-}
+    }
 
+    @Override
+    public void addAuthorToBook(String isbn, int authorId) throws BooksDbException {
+        try {
+            Document query = new Document("ISBN", isbn);
+            Document update = new Document("$push", new Document("authorIds", authorId));
+            bookCollection.updateOne(query, update);
+        } catch (Exception e) {
+            throw new BooksDbException("Error adding author to book: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeAuthorFromBook(String isbn, int authorId) throws BooksDbException {
+        try {
+            Document query = new Document("ISBN", isbn);
+            Document update = new Document("$pull", new Document("authorIds", authorId));
+            bookCollection.updateOne(query, update);
+        } catch (Exception e) {
+            throw new BooksDbException("Error removing author from book: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Integer> getBookAuthors(String isbn) throws BooksDbException {
+        try {
+            Document query = new Document("ISBN", isbn);
+            Document book = bookCollection.find(query).first();
+            if (book != null && book.containsKey("authorIds")) {
+                return book.getList("authorIds", Integer.class);
+            }
+            return new ArrayList<>();
+        } catch (Exception e) {
+            throw new BooksDbException("Error getting book authors: " + e.getMessage());
+        }
+    }
 }

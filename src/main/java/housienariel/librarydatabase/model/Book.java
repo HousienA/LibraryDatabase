@@ -68,6 +68,10 @@ public class Book {
         }
     }
 
+    public void removeAuthor(Author author) {
+        if(this.authors != null) authors.remove(author);
+    }
+
     @Override
     public String toString() {
         return "Book{" +
