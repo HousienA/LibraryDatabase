@@ -26,19 +26,16 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 
-
 public class BookController implements Initializable {
     @FXML private TextField isbnField;
     @FXML private TextField titleField;
     @FXML private ComboBox<Genre> genreComboBox;
     @FXML private ComboBox<Integer> ratingComboBox;
     @FXML private TableView<Book> bookTableView;
-    @FXML private TextField authorSearchField;
     @FXML private ListView<Author> selectedAuthorsListView;
 
     private BookDAO bookDAO;
     private GenreDAO genreDAO;
-    @SuppressWarnings("unused")
     private AuthorDAO authorDAO;
     private final List<Author> selectedAuthors = new ArrayList<>();
 
@@ -57,61 +54,53 @@ public class BookController implements Initializable {
         refreshTableView();
     }
 
-    @SuppressWarnings("unused")
     private void setupSelectionListener() {
         bookTableView.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldSelection, newSelection) -> {
-                    if (newSelection != null) {
-                        populateFields(newSelection);
-                    }
+            (obs, oldSelection, newSelection) -> {
+                if (newSelection != null) {
+                    populateFields(newSelection);
                 }
+            }
         );
     }
 
-// Update the Task in populateFields method
-@SuppressWarnings("unused")
-private void populateFields(Book book) {
-    isbnField.setText(book.getISBN());
-    titleField.setText(book.getTitle());
-    for (Genre genre : genreComboBox.getItems()) {
-        if (genre.getGenreId().equals(book.getGenre().getGenreId())) {
-            genreComboBox.setValue(genre);
-            break;
-        }
+    private void populateFields(Book book) {
+        isbnField.setText(book.getISBN());
+        titleField.setText(book.getTitle());
+        genreComboBox.getItems().stream()
+            .filter(genre -> genre.getGenreId().equals(book.getGenre().getGenreId()))
+            .findFirst()
+            .ifPresent(genreComboBox::setValue);
+
+        ratingComboBox.setValue(book.getRating() != null ? book.getRating().getRatingValue() : null);
+
+        selectedAuthors.clear();
+        selectedAuthorsListView.getItems().clear();
+
+        Task<List<Author>> fetchAuthorsTask = new Task<>() {
+            @Override
+            protected List<Author> call() throws BooksDbException {
+                return bookDAO.getBookAuthors(book.getISBN());
+            }
+        };
+
+        fetchAuthorsTask.setOnSucceeded(e -> {
+            selectedAuthors.addAll(fetchAuthorsTask.getValue());
+            updateSelectedAuthorsListView();
+        });
+
+        fetchAuthorsTask.setOnFailed(e -> {
+            showError("Error loading book's authors: " + fetchAuthorsTask.getException().getMessage());
+        });
+
+        new Thread(fetchAuthorsTask).start();
     }
-
-    if (book.getRating() != null) ratingComboBox.setValue(book.getRating().getRatingValue());
-    else ratingComboBox.setValue(null);
-
-    selectedAuthors.clear();
-    selectedAuthorsListView.getItems().clear();
-
-    Task<List<Author>> fetchAuthorsTask = new Task<>() {
-        @Override
-        protected List<Author> call() throws BooksDbException {
-            return bookDAO.getBookAuthors(book.getISBN());
-        }
-    };
-
-    fetchAuthorsTask.setOnSucceeded(e -> {
-        selectedAuthors.addAll(fetchAuthorsTask.getValue());
-        updateSelectedAuthorsListView();
-    });
-
-    fetchAuthorsTask.setOnFailed(e -> {
-        showError("Error loading book's authors: " + fetchAuthorsTask.getException().getMessage());
-    });
-
-    new Thread(fetchAuthorsTask).start();
-}
-
 
     private void setupRatingComboBox() {
         ratingComboBox.getItems().addAll(1, 2, 3, 4, 5);
         ratingComboBox.setPromptText("Select rating");
     }
 
-    @SuppressWarnings("unused")
     private void setupGenreComboBox() {
         try {
             genreComboBox.getItems().addAll(genreDAO.getAllGenres());
@@ -135,7 +124,6 @@ private void populateFields(Book book) {
         }
     }
 
-    @SuppressWarnings("unused")
     @FXML
     private void handleAddBook() {
         Task<Void> addBookTask = new Task<>() {
@@ -144,9 +132,9 @@ private void populateFields(Book book) {
                 if (!validateInput()) return null;
 
                 Book book = new Book(
-                        isbnField.getText(),
-                        titleField.getText(),
-                        genreComboBox.getValue()
+                    isbnField.getText(),
+                    titleField.getText(),
+                    genreComboBox.getValue()
                 );
 
                 if (ratingComboBox.getValue() != null) {
@@ -158,19 +146,16 @@ private void populateFields(Book book) {
             }
         };
 
-        addBookTask.setOnSucceeded(e -> {
-            Platform.runLater(() -> {
-                clearFields();
-                refreshTableView();
-                showSuccess("Book added successfully");
-            });
-        });
+        addBookTask.setOnSucceeded(e -> Platform.runLater(() -> {
+            clearFields();
+            refreshTableView();
+            showSuccess("Book added successfully");
+        }));
 
         addBookTask.setOnFailed(e -> Platform.runLater(() -> showError("Error adding book: " + addBookTask.getException().getMessage())));
         new Thread(addBookTask).start();
     }
 
-    @SuppressWarnings("unused")
     @FXML
     private void handleUpdateBook() {
         Book selectedBook = bookTableView.getSelectionModel().getSelectedItem();
@@ -210,14 +195,6 @@ private void populateFields(Book book) {
         return true;
     }
 
-    @FXML
-    @SuppressWarnings("unused")
-    private void handleClear() {
-        clearFields();
-        showSuccess("Fields cleared");
-    }
-
-    @SuppressWarnings("unchecked")
     private void setupTableView() {
         TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
         isbnCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getISBN()));
@@ -227,7 +204,6 @@ private void populateFields(Book book) {
         bookTableView.getColumns().addAll(isbnCol, titleCol);
     }
 
-    @SuppressWarnings("unused")
     private void refreshTableView() {
         Task<List<Book>> refreshTask = new Task<>() {
             @Override
