@@ -1,18 +1,30 @@
 package housienariel.librarydatabase.controller;
 
-import housienariel.librarydatabase.model.*;
-import housienariel.librarydatabase.model.dao.*;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
+
+import housienariel.librarydatabase.model.Author;
+import housienariel.librarydatabase.model.Book;
+import housienariel.librarydatabase.model.BooksDbException;
+import housienariel.librarydatabase.model.Genre;
+import housienariel.librarydatabase.model.Rating;
+import housienariel.librarydatabase.model.dao.AuthorDAO;
+import housienariel.librarydatabase.model.dao.BookDAO;
+import housienariel.librarydatabase.model.dao.GenreDAO;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 
 
 public class BookController implements Initializable {
@@ -56,31 +68,41 @@ public class BookController implements Initializable {
         );
     }
 
-    @SuppressWarnings("unused")
-    private void populateFields(Book book) {
-        isbnField.setText(book.getISBN());
-        titleField.setText(book.getTitle());
-        genreComboBox.setValue(book.getGenre());
-        ratingComboBox.setValue(book.getRating() != null ? book.getRating().getRatingValue() : null);
-        selectedAuthors.clear();
-        selectedAuthorsListView.getItems().clear();
-
-        Task<List<Author>> fetchAuthorsTask = new Task<>() {
-            @Override
-            protected List<Author> call() throws BooksDbException {
-                return authorDAO.getAuthorsBooks(book.getISBN());
-            }
-        };
-
-        fetchAuthorsTask.setOnSucceeded(e -> {
-            List<Author> authors = fetchAuthorsTask.getValue();
-            selectedAuthors.addAll(authors);
-            updateSelectedAuthorsListView();
-        });
-
-        fetchAuthorsTask.setOnFailed(e -> showError("Error loading authors: " + fetchAuthorsTask.getException().getMessage()));
-        new Thread(fetchAuthorsTask).start();
+// Update the Task in populateFields method
+private void populateFields(Book book) {
+    isbnField.setText(book.getISBN());
+    titleField.setText(book.getTitle());
+    for (Genre genre : genreComboBox.getItems()) {
+        if (genre.getGenreId().equals(book.getGenre().getGenreId())) {
+            genreComboBox.setValue(genre);
+            break;
+        }
     }
+
+    if (book.getRating() != null) ratingComboBox.setValue(book.getRating().getRatingValue());
+    else ratingComboBox.setValue(null);
+
+    selectedAuthors.clear();
+    selectedAuthorsListView.getItems().clear();
+
+    Task<List<Author>> fetchAuthorsTask = new Task<>() {
+        @Override
+        protected List<Author> call() throws BooksDbException {
+            return bookDAO.getBookAuthors(book.getISBN());
+        }
+    };
+
+    fetchAuthorsTask.setOnSucceeded(e -> {
+        selectedAuthors.addAll(fetchAuthorsTask.getValue());
+        updateSelectedAuthorsListView();
+    });
+
+    fetchAuthorsTask.setOnFailed(e -> {
+        showError("Error loading book's authors: " + fetchAuthorsTask.getException().getMessage());
+    });
+
+    new Thread(fetchAuthorsTask).start();
+}
 
 
     private void setupRatingComboBox() {
