@@ -69,7 +69,7 @@ public class BookController implements Initializable {
         Task<List<Author>> fetchAuthorsTask = new Task<>() {
             @Override
             protected List<Author> call() throws BooksDbException {
-                return authorDAO.getBookAuthors(new ObjectId(book.getISBN()));
+                return authorDAO.getAuthorsBooks(new ObjectId(book.getISBN()));
             }
         };
 

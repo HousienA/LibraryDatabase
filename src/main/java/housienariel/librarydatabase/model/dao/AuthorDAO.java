@@ -15,6 +15,6 @@ public interface AuthorDAO {
     void updateAuthor(Author author) throws BooksDbException;
     void deleteAuthor(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException;
     List<Author> searchAuthorsByName(String namePattern) throws BooksDbException;
-    List<Author> getBookAuthors(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException;
+    List<String> getAuthorsBooks(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException;
     void close();
 }

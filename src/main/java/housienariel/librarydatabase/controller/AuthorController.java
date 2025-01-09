@@ -186,10 +186,11 @@ public class AuthorController implements Initializable {
         booksCol.setCellValueFactory(data -> {
             Author author = data.getValue();
             try {
-                List<Book> books = bookDAO.getAuthorBooks(author.getAuthorId());
+                List<String> bookIsbns = authorDAO.getAuthorsBooks(author.getAuthorId());
                 List<String> bookTitles = new ArrayList<>();
 
-                for (Book book : books) {
+                for (String isbn : bookIsbns) {
+                    Book book = bookDAO.getBookByISBN(isbn);
                     if (book != null) {
                         bookTitles.add(book.getTitle());
                     }
@@ -203,6 +204,7 @@ public class AuthorController implements Initializable {
 
         authorTableView.getColumns().add(booksCol);
     }
+
 
     @SuppressWarnings("unused")
     private void setupSelectionListener() {
