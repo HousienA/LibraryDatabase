@@ -132,7 +132,6 @@ public class AuthorController implements Initializable {
         addButton.setDisable(false);
     }
 
-    @SuppressWarnings("unused")
     @FXML
     private void handleSearchAuthor() {
         String searchTerm = searchAuthorField.getText().trim();

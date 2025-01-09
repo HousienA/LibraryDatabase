@@ -33,8 +33,7 @@ public class BookController implements Initializable {
     @FXML private ComboBox<Genre> genreComboBox;
     @FXML private ComboBox<Integer> ratingComboBox;
     @FXML private TableView<Book> bookTableView;
-    @FXML@SuppressWarnings("unused")
- private TextField authorSearchField;
+    @FXML private TextField authorSearchField;
     @FXML private ListView<Author> selectedAuthorsListView;
 
     private BookDAO bookDAO;
