@@ -1,7 +1,6 @@
 package housienariel.librarydatabase.model.queries;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
@@ -126,20 +125,35 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public List<String> getAuthorBooks(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
+    public List<Author> getBookAuthors(ObjectId bookId) throws BooksDbException {
+        List<Author> authors = new ArrayList<>();
         try {
-            List<String> bookIsbns = new ArrayList<>();
-            Document query = new Document("_id", new Document("$in", Collections.singletonList(authorId)));
+            Document query = new Document("_id", bookId);
+            Document book = bookCollection.find(query).first();
 
-            for (Document doc : bookCollection.find(query)) {
-                bookIsbns.add(doc.getString("ISBN"));
+            if (book != null && book.containsKey("authorIds")) {
+                List<ObjectId> authorIds = book.getList("authorIds", ObjectId.class);
+
+                if (authorIds != null) {
+                    for (ObjectId authorId : authorIds) {
+                        Document authorQuery = new Document("_id", authorId);
+                        Document authorDoc = authorCollection.find(authorQuery).first();
+
+                        if (authorDoc != null) {
+                            authors.add(new Author(
+                                authorDoc.getObjectId("_id"),
+                                authorDoc.getString("name"),
+                                authorDoc.getDate("author_dob")
+                            ));
+                        }
+                    }
+                }
             }
-            return bookIsbns;
         } catch (Exception e) {
-            throw new BooksDbException("Error getting author's books: " + e.getMessage(), e);
+            throw new BooksDbException("Error getting book authors: " + e.getMessage(), e);
         }
+        return authors;
     }
-
 
     @Override
     public void close() {
