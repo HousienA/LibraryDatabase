@@ -19,8 +19,8 @@ public class SearchController {
 
     private BookDAO bookDAO;
     private GenreDAO genreDAO;
-    private WriterDAO writerDAO;
-
+    @SuppressWarnings("unused")
+    private AuthorDAO authorDAO;
 
     @FXML
     @SuppressWarnings("unused")
@@ -29,10 +29,10 @@ public class SearchController {
         setupRatingFilter();
     }
 
-    public void injectDAOs(BookDAO bookDAO, GenreDAO genreDAO, WriterDAO writerDAO) {
+    public void injectDAOs(BookDAO bookDAO, GenreDAO genreDAO, AuthorDAO authorDAO) {
         this.bookDAO = bookDAO;
         this.genreDAO = genreDAO;
-        this.writerDAO = writerDAO;
+        this.authorDAO = authorDAO;
         setupGenreFilter();
     }
 
@@ -63,7 +63,7 @@ public class SearchController {
             Task<String> loadAuthorsTask = new Task<>() {
                 @Override
                 protected String call() throws BooksDbException {
-                    List<Author> authors = writerDAO.getAuthorsForBook(book.getISBN());
+                    List<Author> authors = bookDAO.getBookAuthors(book.getISBN());
                     return authors.stream()
                             .map(Author::getName)
                             .reduce((a, b) -> a + ", " + b)

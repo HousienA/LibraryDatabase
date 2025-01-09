@@ -2,6 +2,7 @@ package housienariel.librarydatabase.model.dao;
 
 import java.util.List;
 
+import housienariel.librarydatabase.model.Author;
 import housienariel.librarydatabase.model.Book;
 import housienariel.librarydatabase.model.BooksDbException;
 
@@ -16,6 +17,6 @@ public interface BookDAO {
     List<Book> searchBooksByRating(int rating) throws BooksDbException;
     void addAuthorToBook(String isbn, int authorId) throws BooksDbException;
     void removeAuthorFromBook(String isbn, int authorId) throws BooksDbException;
-    List<Integer> getBookAuthors(String isbn) throws BooksDbException;
+    List<Author> getBookAuthors(String isbn) throws BooksDbException;
 
 }

@@ -1,7 +1,8 @@
 package housienariel.librarydatabase.model;
 
-import org.bson.types.ObjectId;
 import java.util.Date;
+
+import org.bson.types.ObjectId;
 
 public class Author {
 
@@ -12,6 +13,10 @@ public class Author {
         this.authorId = authorId;
         this.name = name;
         this.authorDob = authorDob;
+    }
+
+    public Author(String name) {
+        this.name = name;
     }
 
     @SuppressWarnings("exports")
