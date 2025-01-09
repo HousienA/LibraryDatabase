@@ -192,7 +192,7 @@ public class BookQuery implements BookDAO {
                 return authors;
             }
 
-            return new ArrayList<>(); // No authors found
+            return new ArrayList<>();
         } catch (Exception e) {
             throw new BooksDbException("Error getting book authors: " + e.getMessage(), e);
         }
