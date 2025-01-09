@@ -186,16 +186,17 @@ public class AuthorController implements Initializable {
         booksCol.setCellValueFactory(data -> {
             Author author = data.getValue();
             try {
-                List<String> bookISBNs = authorDAO.getBookAuthors(author.getAuthorId());
+                List<Book> books = bookDAO.getAuthorBooks(author.getAuthorId());
                 List<String> bookTitles = new ArrayList<>();
-                for (String isbn : bookISBNs) {
-                    Book book = bookDAO.getBookByISBN(isbn);
+
+                for (Book book : books) {
                     if (book != null) {
                         bookTitles.add(book.getTitle());
                     }
                 }
+
                 return new SimpleStringProperty(String.join(", ", bookTitles));
-            } catch (BooksDbException e) {
+            } catch (Exception e) {
                 return new SimpleStringProperty("Error loading books");
             }
         });
