@@ -20,7 +20,8 @@ public class BookController implements Initializable {
     @FXML private ComboBox<Genre> genreComboBox;
     @FXML private ComboBox<Integer> ratingComboBox;
     @FXML private TableView<Book> bookTableView;
-    @FXML private TextField authorSearchField;
+    @FXML@SuppressWarnings("unused")
+ private TextField authorSearchField;
     @FXML private ListView<Author> selectedAuthorsListView;
 
     private BookDAO bookDAO;
@@ -32,7 +33,6 @@ public class BookController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         setupTableView();
         setupRatingComboBox();
-        setupSelectedAuthorsListView();
         setupSelectionListener();
     }
 
@@ -44,6 +44,7 @@ public class BookController implements Initializable {
         refreshTableView();
     }
 
+    @SuppressWarnings("unused")
     private void setupSelectionListener() {
         bookTableView.getSelectionModel().selectedItemProperty().addListener(
                 (obs, oldSelection, newSelection) -> {
@@ -54,6 +55,7 @@ public class BookController implements Initializable {
         );
     }
 
+    @SuppressWarnings("unused")
     private void populateFields(Book book) {
         isbnField.setText(book.getISBN());
         titleField.setText(book.getTitle());
@@ -65,7 +67,7 @@ public class BookController implements Initializable {
         Task<List<Author>> fetchAuthorsTask = new Task<>() {
             @Override
             protected List<Author> call() throws BooksDbException {
-                return authorDAO.getAuthorsByBookISBN(book.getISBN());
+                return authorDAO.getAuthorBooks(book.getISBN());
             }
         };
 
@@ -84,6 +86,7 @@ public class BookController implements Initializable {
         ratingComboBox.setPromptText("Select rating");
     }
 
+    @SuppressWarnings("unused")
     private void setupGenreComboBox() {
         try {
             genreComboBox.getItems().addAll(genreDAO.getAllGenres());
@@ -107,6 +110,7 @@ public class BookController implements Initializable {
         }
     }
 
+    @SuppressWarnings("unused")
     @FXML
     private void handleAddBook() {
         Task<Void> addBookTask = new Task<>() {
@@ -141,6 +145,7 @@ public class BookController implements Initializable {
         new Thread(addBookTask).start();
     }
 
+    @SuppressWarnings("unused")
     @FXML
     private void handleUpdateBook() {
         Book selectedBook = bookTableView.getSelectionModel().getSelectedItem();
@@ -181,11 +186,13 @@ public class BookController implements Initializable {
     }
 
     @FXML
+    @SuppressWarnings("unused")
     private void handleClear() {
         clearFields();
         showSuccess("Fields cleared");
     }
 
+    @SuppressWarnings("unchecked")
     private void setupTableView() {
         TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
         isbnCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getISBN()));
@@ -195,6 +202,7 @@ public class BookController implements Initializable {
         bookTableView.getColumns().addAll(isbnCol, titleCol);
     }
 
+    @SuppressWarnings("unused")
     private void refreshTableView() {
         Task<List<Book>> refreshTask = new Task<>() {
             @Override
