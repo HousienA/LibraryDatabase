@@ -19,6 +19,7 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -33,6 +34,12 @@ public class BookController implements Initializable {
     @FXML private ComboBox<Integer> ratingComboBox;
     @FXML private TableView<Book> bookTableView;
     @FXML private ListView<Author> selectedAuthorsListView;
+    @FXML private TableView<Author> authorTableView;
+    @FXML private Button addButton;
+    @FXML private Button updateButton;
+    @FXML private TextField searchAuthorField;
+    private Author selectedAuthor;
+
 
     private BookDAO bookDAO;
     private GenreDAO genreDAO;
@@ -216,6 +223,60 @@ public class BookController implements Initializable {
         refreshTask.setOnFailed(e -> Platform.runLater(() -> showError("Error refreshing books: " + refreshTask.getException().getMessage())));
 
         new Thread(refreshTask).start();
+    }
+
+    @FXML
+    @SuppressWarnings("unused")
+    private void handleClear() {
+        clearFields();
+        selectedAuthor = null;
+        updateButton.setDisable(true);
+        addButton.setDisable(false);
+    }
+
+    @SuppressWarnings("unused")
+    private void loadAuthors() {
+        Task<List<Author>> loadAuthorsTask = new Task<>() {
+            @Override
+            protected List<Author> call() throws BooksDbException {
+                return authorDAO.getAllAuthors();
+            }
+        };
+
+        loadAuthorsTask.setOnSucceeded(e -> {
+            authorTableView.getItems().setAll(loadAuthorsTask.getValue());
+        });
+
+        loadAuthorsTask.setOnFailed(e -> {
+            showError("Error loading authors: " + loadAuthorsTask.getException().getMessage());
+        });
+
+        new Thread(loadAuthorsTask).start();
+    }
+    @FXML
+    private void handleSearchAuthor() {
+        String searchTerm = searchAuthorField.getText().trim();
+        if (searchTerm.isEmpty()) {
+            loadAuthors();
+            return;
+        }
+
+        Task<List<Author>> searchAuthorsTask = new Task<>() {
+            @Override
+            protected List<Author> call() throws BooksDbException {
+                return authorDAO.searchAuthorsByName(searchTerm);
+            }
+        };
+
+        searchAuthorsTask.setOnSucceeded(e -> {
+            authorTableView.getItems().setAll(searchAuthorsTask.getValue());
+        });
+
+        searchAuthorsTask.setOnFailed(e -> {
+            showError("Error searching authors: " + searchAuthorsTask.getException().getMessage());
+        });
+
+        new Thread(searchAuthorsTask).start();
     }
 
     private void updateSelectedAuthorsListView() {

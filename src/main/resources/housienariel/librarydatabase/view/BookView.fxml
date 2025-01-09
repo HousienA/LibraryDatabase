@@ -41,7 +41,7 @@
         <VBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="4">
             <HBox spacing="10">
                 <TextField fx:id="authorSearchField" promptText="Search author by name" HBox.hgrow="ALWAYS"/>
-                <Button text="Search" onAction="#handleAuthorSearch"/>
+                <Button text="Search" onAction="#handleSearchAuthor"/>
             </HBox>
             <ListView fx:id="selectedAuthorsListView" prefHeight="200.0"/>
         </VBox>
