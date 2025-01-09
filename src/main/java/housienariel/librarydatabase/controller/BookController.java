@@ -16,6 +16,7 @@ import java.util.ResourceBundle;
 
 import org.bson.types.ObjectId;
 
+
 public class BookController implements Initializable {
     @FXML private TextField isbnField;
     @FXML private TextField titleField;
@@ -69,7 +70,7 @@ public class BookController implements Initializable {
         Task<List<Author>> fetchAuthorsTask = new Task<>() {
             @Override
             protected List<Author> call() throws BooksDbException {
-                return authorDAO.getAuthorsBooks(new ObjectId(book.getISBN()));
+                return authorDAO.getAuthorsBooks(book.getISBN());
             }
         };
 

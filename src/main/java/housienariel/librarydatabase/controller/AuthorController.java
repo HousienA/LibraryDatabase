@@ -181,6 +181,7 @@ public class AuthorController implements Initializable {
         authorTableView.getColumns().addAll(idCol, nameCol, dobCol);
     }
 
+    @SuppressWarnings("UseSpecificCatch")
     private void setupBooksColumn() {
         TableColumn<Author, String> booksCol = new TableColumn<>("Books");
         booksCol.setCellValueFactory(data -> {
