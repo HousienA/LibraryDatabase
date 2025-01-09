@@ -39,6 +39,7 @@ public class BookController implements Initializable {
 
     private BookDAO bookDAO;
     private GenreDAO genreDAO;
+    @SuppressWarnings("unused")
     private AuthorDAO authorDAO;
     private final List<Author> selectedAuthors = new ArrayList<>();
 
@@ -69,6 +70,7 @@ public class BookController implements Initializable {
     }
 
 // Update the Task in populateFields method
+@SuppressWarnings("unused")
 private void populateFields(Book book) {
     isbnField.setText(book.getISBN());
     titleField.setText(book.getTitle());
