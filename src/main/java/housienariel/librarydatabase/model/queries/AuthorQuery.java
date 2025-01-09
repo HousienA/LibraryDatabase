@@ -125,7 +125,7 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public List<Author> getBookAuthors(ObjectId bookId) throws BooksDbException {
+    public List<Author> getBookAuthors(@SuppressWarnings("exports") ObjectId bookId) throws BooksDbException {
         List<Author> authors = new ArrayList<>();
         try {
             Document query = new Document("_id", bookId);
