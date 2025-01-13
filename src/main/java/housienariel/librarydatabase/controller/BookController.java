@@ -150,6 +150,13 @@ public class BookController implements Initializable {
                     book.setRating(new Rating(0, ratingComboBox.getValue()));
                 }
 
+                // Collect selected authors' ObjectIds
+                List<ObjectId> authorIds = new ArrayList<>();
+                for (Author author : selectedAuthors) {
+                    authorIds.add(author.getAuthorId());
+                }
+                book.setAuthors(authorIds);
+
                 bookDAO.addBook(book);
                 return null;
             }
@@ -164,6 +171,7 @@ public class BookController implements Initializable {
         addBookTask.setOnFailed(e -> Platform.runLater(() -> showError("Error adding book: " + addBookTask.getException().getMessage())));
         new Thread(addBookTask).start();
     }
+
 
     @FXML
     private void handleUpdateBook() {
@@ -306,6 +314,7 @@ private void setupTableView() {
         selectedAuthorsListView.getItems().clear();
         selectedAuthorsListView.getItems().addAll(selectedAuthors);
     }
+
 
     private void clearFields() {
         isbnField.clear();
