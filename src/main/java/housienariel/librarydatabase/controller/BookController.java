@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import org.bson.types.ObjectId;
+
 import housienariel.librarydatabase.model.Author;
 import housienariel.librarydatabase.model.Book;
 import housienariel.librarydatabase.model.BooksDbException;
@@ -202,14 +204,35 @@ public class BookController implements Initializable {
         return true;
     }
 
-    private void setupTableView() {
-        TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
-        isbnCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getISBN()));
-        TableColumn<Book, String> titleCol = new TableColumn<>("Title");
-        titleCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTitle()));
+private void setupTableView() {
+    TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
+    isbnCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getISBN()));
 
-        bookTableView.getColumns().addAll(isbnCol, titleCol);
-    }
+    TableColumn<Book, String> titleCol = new TableColumn<>("Title");
+    titleCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTitle()));
+
+    TableColumn<Book, String> genreCol = new TableColumn<>("Genre");
+    genreCol.setCellValueFactory(data -> {
+        Genre genre = data.getValue().getGenre();
+        return new SimpleStringProperty(genre != null ? genre.getGenreName() : "N/A");
+    });
+
+    TableColumn<Book, String> ratingCol = new TableColumn<>("Rating");
+    ratingCol.setCellValueFactory(data -> {
+        Rating rating = data.getValue().getRating();
+        return new SimpleStringProperty(rating != null ? String.valueOf(rating) : "N/A");
+    });
+
+    TableColumn<Book, String> authorsCol = new TableColumn<>("Authors");
+    authorsCol.setCellValueFactory(data -> {
+        List<ObjectId> authors = data.getValue().getAuthors();
+        return new SimpleStringProperty(authors != null ? String.valueOf(authors.size()) : "N/A");
+    });
+
+    bookTableView.getColumns().addAll(isbnCol, titleCol, genreCol, ratingCol, authorsCol);
+}
+
+
 
     private void refreshTableView() {
         Task<List<Book>> refreshTask = new Task<>() {

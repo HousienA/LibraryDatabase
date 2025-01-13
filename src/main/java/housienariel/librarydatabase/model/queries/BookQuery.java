@@ -151,7 +151,7 @@ public class BookQuery implements BookDAO {
     public void addAuthorToBook(String isbn, int authorId) throws BooksDbException {
         try {
             Document query = new Document("ISBN", isbn);
-            Document update = new Document("$push", new Document("authorIds", authorId));
+            Document update = new Document("$push", new Document("author_id", authorId));
             bookCollection.updateOne(query, update);
         } catch (Exception e) {
             throw new BooksDbException("Error adding author to book: " + e.getMessage());

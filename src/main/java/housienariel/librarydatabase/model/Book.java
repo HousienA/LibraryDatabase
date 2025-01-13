@@ -3,12 +3,14 @@ package housienariel.librarydatabase.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.types.ObjectId;
+
 public class Book {
     private String ISBN;
     private String title;
     private Genre genre;
     private Rating rating;
-    private List<Author> authors;
+    private List<ObjectId> authors;
 
     public Book(String ISBN, String title, Genre genre) {
         this.ISBN = ISBN;
@@ -54,22 +56,22 @@ public class Book {
         this.rating = rating;
     }
 
-    public List<Author> getAuthors() {
+    public List<ObjectId> getAuthors() {
         return new ArrayList<>(authors);
     }
 
-    public void setAuthors(List<Author> authors) {
+    public void setAuthors(List<ObjectId> authors) {
         this.authors = new ArrayList<>(authors);
     }
 
-    public void addAuthor(Author author) {
-        if (!authors.contains(author)) {
-            authors.add(author);
+    public void addAuthor(ObjectId authorId) {
+        if (!authors.contains(authorId)) {
+            authors.add(authorId);
         }
     }
 
-    public void removeAuthor(Author author) {
-        if(this.authors != null) authors.remove(author);
+    public void removeAuthor(ObjectId authorId) {
+        authors.remove(authorId);
     }
 
     @Override
@@ -79,8 +81,9 @@ public class Book {
                 ", title='" + title + '\'' +
                 ", genre=" + (genre != null ? genre.getGenreName() : "null") +
                 ", rating=" + (rating != null ? rating.getRatingValue() : "null") +
-                ", authors=" + authors.stream().map(Author::getName).toList() +
+                ", authors=" + authors +
                 '}';
     }
+
 
 }

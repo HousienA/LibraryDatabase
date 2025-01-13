@@ -128,7 +128,7 @@ public class AuthorQuery implements AuthorDAO {
     public List<String> getAuthorsBooks(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
         try {
             List<String> bookIsbns = new ArrayList<>();
-            Document query = new Document("authorIds", authorId);
+            Document query = new Document("author_id", authorId);
             for (Document bookDoc : bookCollection.find(query)) {
                 bookIsbns.add(bookDoc.getString("ISBN"));
             }
