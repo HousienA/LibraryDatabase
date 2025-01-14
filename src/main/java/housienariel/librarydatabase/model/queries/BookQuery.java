@@ -9,6 +9,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 
+import housienariel.librarydatabase.model.Author;
 import housienariel.librarydatabase.model.Book;
 import housienariel.librarydatabase.model.BooksDbException;
 import housienariel.librarydatabase.model.Genre;
@@ -59,7 +60,6 @@ public class BookQuery implements BookDAO {
         return null;
     }
 
-    // error
     @Override
     public List<Book> getAllBooks() throws BooksDbException {
         List<Book> books = new ArrayList<>();
@@ -126,7 +126,7 @@ public class BookQuery implements BookDAO {
         return books;
     }
 
-        @Override
+    @Override
     public List<Book> searchBooksByRating(int rating) throws BooksDbException {
         List<Book> books = new ArrayList<>();
         try {
@@ -145,6 +145,57 @@ public class BookQuery implements BookDAO {
             throw new BooksDbException("Error searching for books by rating", e);
         }
         return books;
-}
+    }
+
+    @Override
+    public void addAuthorToBook(String isbn, int authorId) throws BooksDbException {
+        try {
+            Document query = new Document("ISBN", isbn);
+            Document update = new Document("$push", new Document("author_id", authorId));
+            bookCollection.updateOne(query, update);
+        } catch (Exception e) {
+            throw new BooksDbException("Error adding author to book: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeAuthorFromBook(String isbn, int authorId) throws BooksDbException {
+        try {
+            Document query = new Document("ISBN", isbn);
+            Document update = new Document("$pull", new Document("author_id", authorId));
+            bookCollection.updateOne(query, update);
+        } catch (Exception e) {
+            throw new BooksDbException("Error removing author from book: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Author> getBookAuthors(String isbn) throws BooksDbException {
+        try {
+            Document query = new Document("ISBN", isbn);
+            Document book = bookCollection.find(query).first();
+
+            if (book != null && book.containsKey("author_id")) {
+                List<Integer> authorIds = book.getList("author_id", Integer.class);
+
+                List<Author> authors = new ArrayList<>();
+                for (Integer authorId : authorIds) {
+                    Document authorQuery = new Document("_id", authorId);
+                    Document authorDoc = bookCollection.find(authorQuery).first();
+
+                    if (authorDoc != null) {
+                        String name = authorDoc.getString("name");
+                        authors.add(new Author(name));
+                    }
+                }
+
+                return authors;
+            }
+
+            return new ArrayList<>();
+        } catch (Exception e) {
+            throw new BooksDbException("Error getting book authors: " + e.getMessage(), e);
+        }
+    }
 
 }
