@@ -212,5 +212,4 @@ public class BookQuery implements BookDAO {
         }
         return authors;
     }
-
 }
