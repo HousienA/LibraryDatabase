@@ -18,10 +18,12 @@ public class AuthorQuery implements AuthorDAO {
 
     private final MongoClient mongoClient;
     private final MongoCollection<Document> authorCollection;
+    private final MongoCollection<Document> bookCollection;
 
     public AuthorQuery() {
         mongoClient = MongoClients.create("mongodb://localhost:27017");
         authorCollection = mongoClient.getDatabase("Library").getCollection("Author");
+        bookCollection = mongoClient.getDatabase("Library").getCollection("Book");
     }
 
     @Override
@@ -30,6 +32,7 @@ public class AuthorQuery implements AuthorDAO {
             Document doc = new Document("name", author.getName())
                     .append("author_dob", author.getAuthorDob());
             authorCollection.insertOne(doc);
+            author.setAuthorId(doc.getObjectId("_id"));
         } catch (Exception e) {
             throw new BooksDbException("Error adding author: " + e.getMessage(), e);
         }
@@ -60,7 +63,7 @@ public class AuthorQuery implements AuthorDAO {
 
             if (doc != null) {
                 return new Author(
-                        doc.getObjectId("_id"), 
+                        doc.getObjectId("_id"),
                         doc.getString("name"),
                         doc.getDate("author_dob")
                 );
@@ -87,6 +90,13 @@ public class AuthorQuery implements AuthorDAO {
     @Override
     public void deleteAuthor(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
         try {
+            Document update = new Document("$pull",
+                new Document("authorIds", authorId));
+            bookCollection.updateMany(
+                new Document("authorIds", authorId),
+                update
+            );
+
             Document query = new Document("_id", authorId);
             authorCollection.deleteOne(query);
         } catch (Exception e) {
@@ -98,7 +108,9 @@ public class AuthorQuery implements AuthorDAO {
     public List<Author> searchAuthorsByName(String namePattern) throws BooksDbException {
         List<Author> authors = new ArrayList<>();
         try {
-            Document query = new Document("name", new Document("$regex", namePattern).append("$options", "i"));
+            Document query = new Document("name",
+                new Document("$regex", namePattern)
+                    .append("$options", "i"));
             for (Document doc : authorCollection.find(query)) {
                 authors.add(new Author(
                         doc.getObjectId("_id"),
@@ -112,7 +124,25 @@ public class AuthorQuery implements AuthorDAO {
         return authors;
     }
 
+    @Override
+    public List<String> getAuthorsBooks(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
+        try {
+            List<String> bookIsbns = new ArrayList<>();
+            Document query = new Document("author_id", authorId);
+            for (Document bookDoc : bookCollection.find(query)) {
+                bookIsbns.add(bookDoc.getString("ISBN"));
+            }
+            return bookIsbns;
+        } catch (Exception e) {
+            throw new BooksDbException("Error getting books for author: " + e.getMessage(), e);
+        }
+    }
+
+
+    @Override
     public void close() {
-        mongoClient.close();
+        if (mongoClient != null) {
+            mongoClient.close();
+        }
     }
 }

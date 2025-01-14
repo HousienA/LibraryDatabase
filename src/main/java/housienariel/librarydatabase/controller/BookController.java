@@ -1,18 +1,33 @@
 package housienariel.librarydatabase.controller;
 
-import housienariel.librarydatabase.model.*;
-import housienariel.librarydatabase.model.dao.*;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
+
+import org.bson.types.ObjectId;
+
+import housienariel.librarydatabase.model.Author;
+import housienariel.librarydatabase.model.Book;
+import housienariel.librarydatabase.model.BooksDbException;
+import housienariel.librarydatabase.model.Genre;
+import housienariel.librarydatabase.model.Rating;
+import housienariel.librarydatabase.model.dao.AuthorDAO;
+import housienariel.librarydatabase.model.dao.BookDAO;
+import housienariel.librarydatabase.model.dao.GenreDAO;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 
 public class BookController implements Initializable {
     @FXML private TextField isbnField;
@@ -20,12 +35,16 @@ public class BookController implements Initializable {
     @FXML private ComboBox<Genre> genreComboBox;
     @FXML private ComboBox<Integer> ratingComboBox;
     @FXML private TableView<Book> bookTableView;
-    @FXML private TextField authorSearchField;
     @FXML private ListView<Author> selectedAuthorsListView;
+    @FXML private TableView<Author> authorTableView;
+    @FXML private Button addButton;
+    @FXML private Button updateButton;
+    @FXML private TextField searchAuthorField;
+    private Author selectedAuthor;
+
 
     private BookDAO bookDAO;
     private GenreDAO genreDAO;
-    private WriterDAO writerDAO;
     private AuthorDAO authorDAO;
     private final List<Author> selectedAuthors = new ArrayList<>();
 
@@ -33,70 +52,57 @@ public class BookController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         setupTableView();
         setupRatingComboBox();
-        setupSelectedAuthorsListView();
         setupSelectionListener();
     }
 
-    public void injectDAOs(BookDAO bookDAO, GenreDAO genreDAO, WriterDAO writerDAO, AuthorDAO authorDAO) {
+    public void injectDAOs(BookDAO bookDAO, GenreDAO genreDAO, AuthorDAO authorDAO) {
         this.bookDAO = bookDAO;
         this.genreDAO = genreDAO;
-        this.writerDAO = writerDAO;
         this.authorDAO = authorDAO;
         setupGenreComboBox();
         refreshTableView();
     }
 
-    @SuppressWarnings("unused")
     private void setupSelectionListener() {
         bookTableView.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldSelection, newSelection) -> {
-                    if (newSelection != null) {
-                        populateFields(newSelection);
-                    }
+            (obs, oldSelection, newSelection) -> {
+                if (newSelection != null) {
+                    populateFields(newSelection);
                 }
+            }
         );
     }
 
     private void populateFields(Book book) {
         isbnField.setText(book.getISBN());
         titleField.setText(book.getTitle());
-        for (Genre genre : genreComboBox.getItems()) {
-            if (genre.getGenreId().equals(book.getGenre().getGenreId())) {
-                genreComboBox.setValue(genre);
-                break;
-            }
-        }
+        genreComboBox.getItems().stream()
+            .filter(genre -> genre.getGenreId().equals(book.getGenre().getGenreId()))
+            .findFirst()
+            .ifPresent(genreComboBox::setValue);
 
-        if (book.getRating() != null) ratingComboBox.setValue(book.getRating().getRatingValue());
-        else ratingComboBox.setValue(null);
+        ratingComboBox.setValue(book.getRating() != null ? book.getRating().getRatingValue() : null);
 
         selectedAuthors.clear();
         selectedAuthorsListView.getItems().clear();
 
-        Task<List<Author>> fetchAuthorsTask = getListTask(book);
-
-        new Thread(fetchAuthorsTask).start();
-    }
-
-    @SuppressWarnings("unused")
-    private Task<List<Author>> getListTask(Book book) {
         Task<List<Author>> fetchAuthorsTask = new Task<>() {
             @Override
             protected List<Author> call() throws BooksDbException {
-                return writerDAO.getAuthorsForBook(book.getISBN());
+                return bookDAO.getBookAuthors(book.getISBN());
             }
         };
 
         fetchAuthorsTask.setOnSucceeded(e -> {
-            List<Author> bookAuthors = fetchAuthorsTask.getValue();
-            selectedAuthors.addAll(bookAuthors);
+            selectedAuthors.addAll(fetchAuthorsTask.getValue());
             updateSelectedAuthorsListView();
         });
 
         fetchAuthorsTask.setOnFailed(e -> {
             showError("Error loading book's authors: " + fetchAuthorsTask.getException().getMessage());
         });
-        return fetchAuthorsTask;
+
+        new Thread(fetchAuthorsTask).start();
     }
 
     private void setupRatingComboBox() {
@@ -104,19 +110,18 @@ public class BookController implements Initializable {
         ratingComboBox.setPromptText("Select rating");
     }
 
-    @SuppressWarnings("unused")
     private void setupGenreComboBox() {
         try {
             genreComboBox.getItems().addAll(genreDAO.getAllGenres());
             genreComboBox.setPromptText("Select genre");
-            genreComboBox.setCellFactory(listView -> new ListCell<Genre>() {
+            genreComboBox.setCellFactory(listView -> new ListCell<>() {
                 @Override
                 protected void updateItem(Genre genre, boolean empty) {
                     super.updateItem(genre, empty);
                     setText(empty || genre == null ? null : genre.getGenreName());
                 }
             });
-            genreComboBox.setButtonCell(new ListCell<Genre>() {
+            genreComboBox.setButtonCell(new ListCell<>() {
                 @Override
                 protected void updateItem(Genre genre, boolean empty) {
                     super.updateItem(genre, empty);
@@ -128,59 +133,47 @@ public class BookController implements Initializable {
         }
     }
 
-    @SuppressWarnings("unused")
     @FXML
     private void handleAddBook() {
         Task<Void> addBookTask = new Task<>() {
             @Override
             protected Void call() throws BooksDbException {
-                if (!validateInput()) {
-                    return null;
-                }
+                if (!validateInput()) return null;
 
                 Book book = new Book(
-                        isbnField.getText(),
-                        titleField.getText(),
-                        genreComboBox.getValue()
+                    isbnField.getText(),
+                    titleField.getText(),
+                    genreComboBox.getValue()
                 );
 
                 if (ratingComboBox.getValue() != null) {
-                    Rating rating = new Rating(0, ratingComboBox.getValue());
-                    book.setRating(rating);
+                    book.setRating(new Rating(0, ratingComboBox.getValue()));
                 }
+
+                // Collect selected authors' ObjectIds
+                List<ObjectId> authorIds = new ArrayList<>();
+                for (Author author : selectedAuthors) {
+                    authorIds.add(author.getAuthorId());
+                }
+                book.setAuthors(authorIds);
 
                 bookDAO.addBook(book);
-
-                if (!selectedAuthors.isEmpty()) {
-                    for (Author author : selectedAuthors) {
-                        writerDAO.addAuthorToBook(book.getISBN(), author);
-                    }
-                }
                 return null;
             }
         };
 
-        addBookTask.setOnSucceeded(e -> {
-            Platform.runLater(() -> {
-                clearFields();
-                refreshTableView();
-                showSuccess("Book added successfully");
-            });
-        });
+        addBookTask.setOnSucceeded(e -> Platform.runLater(() -> {
+            clearFields();
+            refreshTableView();
+            showSuccess("Book added successfully");
+        }));
 
-        addBookTask.setOnFailed(e -> {
-            Platform.runLater(() -> {
-                showError("Error adding book: " + addBookTask.getException().getMessage());
-            });
-        });
-
-        Thread thread = new Thread(addBookTask);
-        thread.setDaemon(true);
-        thread.start();
+        addBookTask.setOnFailed(e -> Platform.runLater(() -> showError("Error adding book: " + addBookTask.getException().getMessage())));
+        new Thread(addBookTask).start();
     }
 
+
     @FXML
-    @SuppressWarnings("unused")
     private void handleUpdateBook() {
         Book selectedBook = bookTableView.getSelectionModel().getSelectedItem();
         if (selectedBook == null) {
@@ -193,10 +186,8 @@ public class BookController implements Initializable {
             protected Void call() throws BooksDbException {
                 selectedBook.setTitle(titleField.getText());
                 selectedBook.setGenre(genreComboBox.getValue());
-
                 if (ratingComboBox.getValue() != null) {
-                    Rating rating = new Rating(0, ratingComboBox.getValue());
-                    selectedBook.setRating(rating);
+                    selectedBook.setRating(new Rating(0, ratingComboBox.getValue()));
                 }
 
                 bookDAO.updateBook(selectedBook);
@@ -204,56 +195,53 @@ public class BookController implements Initializable {
             }
         };
 
-        updateBookTask.setOnSucceeded(e -> {
-            Platform.runLater(() -> {
-                refreshTableView();
-                showSuccess("Book updated successfully");
-            });
-        });
+        updateBookTask.setOnSucceeded(e -> Platform.runLater(() -> {
+            refreshTableView();
+            showSuccess("Book updated successfully");
+        }));
 
-        updateBookTask.setOnFailed(e -> {
-            Platform.runLater(() -> {
-                showError("Error updating book: " + updateBookTask.getException().getMessage());
-            });
-        });
-
+        updateBookTask.setOnFailed(e -> Platform.runLater(() -> showError("Error updating book: " + updateBookTask.getException().getMessage())));
         new Thread(updateBookTask).start();
     }
 
     private boolean validateInput() {
-        if (isbnField.getText().isEmpty() || titleField.getText().isEmpty()
-                || genreComboBox.getValue() == null) {
+        if (isbnField.getText().isEmpty() || titleField.getText().isEmpty() || genreComboBox.getValue() == null) {
             showError("Please fill in all required fields");
             return false;
         }
         return true;
     }
 
-    @FXML
-    @SuppressWarnings("unused")
-    private void handleClear() {
-        isbnField.clear();
-        titleField.clear();
-        genreComboBox.setValue(null);
-        ratingComboBox.setValue(null);
-        bookTableView.getSelectionModel().clearSelection();
-        selectedAuthors.clear();
-        selectedAuthorsListView.getItems().clear();
-        showSuccess("Fields cleared");
-    }
+private void setupTableView() {
+    TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
+    isbnCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getISBN()));
 
-    @SuppressWarnings("unchecked")
-    private void setupTableView() {
-        TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
-        isbnCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getISBN()));
-        TableColumn<Book, String> titleCol = new TableColumn<>("Title");
-        titleCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTitle()));
+    TableColumn<Book, String> titleCol = new TableColumn<>("Title");
+    titleCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTitle()));
 
-        bookTableView.getColumns().addAll(isbnCol, titleCol);
-    }
+    TableColumn<Book, String> genreCol = new TableColumn<>("Genre");
+    genreCol.setCellValueFactory(data -> {
+        Genre genre = data.getValue().getGenre();
+        return new SimpleStringProperty(genre != null ? genre.getGenreName() : "N/A");
+    });
 
-    // error 
-    @SuppressWarnings("unused")
+    TableColumn<Book, String> ratingCol = new TableColumn<>("Rating");
+    ratingCol.setCellValueFactory(data -> {
+        Rating rating = data.getValue().getRating();
+        return new SimpleStringProperty(rating != null ? String.valueOf(rating) : "N/A");
+    });
+
+    TableColumn<Book, String> authorsCol = new TableColumn<>("Authors");
+    authorsCol.setCellValueFactory(data -> {
+        List<ObjectId> authors = data.getValue().getAuthors();
+        return new SimpleStringProperty(authors != null ? String.valueOf(authors.size()) : "N/A");
+    });
+
+    bookTableView.getColumns().addAll(isbnCol, titleCol, genreCol, ratingCol, authorsCol);
+}
+
+
+
     private void refreshTableView() {
         Task<List<Book>> refreshTask = new Task<>() {
             @Override
@@ -261,95 +249,65 @@ public class BookController implements Initializable {
                 return bookDAO.getAllBooks();
             }
         };
-        refreshTask.setOnSucceeded(e -> {
-            Platform.runLater(() -> {
-                bookTableView.getItems().setAll(refreshTask.getValue());
-            });
-        });
 
-        refreshTask.setOnFailed(e -> {
-            Platform.runLater(() -> {
-                showError("Error refreshing books: " + refreshTask.getException().getMessage());
-            });
-        });
+        refreshTask.setOnSucceeded(e -> Platform.runLater(() -> bookTableView.getItems().setAll(refreshTask.getValue())));
+        refreshTask.setOnFailed(e -> Platform.runLater(() -> showError("Error refreshing books: " + refreshTask.getException().getMessage())));
 
         new Thread(refreshTask).start();
     }
 
-
     @FXML
     @SuppressWarnings("unused")
-    private void handleAuthorSearch() {
-        String searchTerm = authorSearchField.getText().trim();
-        Task<List<Author>> searchAuthorTask = new Task<>() {
+    private void handleClear() {
+        clearFields();
+        selectedAuthor = null;
+        updateButton.setDisable(true);
+        addButton.setDisable(false);
+    }
+
+    @SuppressWarnings("unused")
+    private void loadAuthors() {
+        Task<List<Author>> loadAuthorsTask = new Task<>() {
+            @Override
+            protected List<Author> call() throws BooksDbException {
+                return authorDAO.getAllAuthors();
+            }
+        };
+
+        loadAuthorsTask.setOnSucceeded(e -> {
+            authorTableView.getItems().setAll(loadAuthorsTask.getValue());
+        });
+
+        loadAuthorsTask.setOnFailed(e -> {
+            showError("Error loading authors: " + loadAuthorsTask.getException().getMessage());
+        });
+
+        new Thread(loadAuthorsTask).start();
+    }
+    @FXML
+    private void handleSearchAuthor() {
+        String searchTerm = searchAuthorField.getText().trim();
+        if (searchTerm.isEmpty()) {
+            loadAuthors();
+            return;
+        }
+
+        Task<List<Author>> searchAuthorsTask = new Task<>() {
             @Override
             protected List<Author> call() throws BooksDbException {
                 return authorDAO.searchAuthorsByName(searchTerm);
             }
         };
 
-        searchAuthorTask.setOnSucceeded(e -> {
-            List<Author> authors = searchAuthorTask.getValue();
-            if (authors.isEmpty()) {
-                showError("No authors found with that name");
-                return;
-            }
-            Dialog<List<Author>> dialog = new Dialog<>();
-            dialog.setTitle("Select Authors");
-            dialog.setHeaderText("Select one or more authors from the results");
-
-            ListView<Author> authorListView = new ListView<>();
-            authorListView.getItems().addAll(authors);
-            authorListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
-            setupSelectedAuthorsListView(authorListView);
-
-            dialog.getDialogPane().setContent(authorListView);
-            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-            dialog.setResultConverter(buttonType -> {
-                if (buttonType == ButtonType.OK) {
-                    return new ArrayList<>(authorListView.getSelectionModel().getSelectedItems());
-                }
-                return null;
-            });
-
-            dialog.showAndWait().ifPresent(selectedAuthorsResult -> {
-                for (Author author : selectedAuthorsResult) {
-                    if (!this.selectedAuthors.contains(author)) {
-                        this.selectedAuthors.add(author);
-                    }
-                }
-                updateSelectedAuthorsListView();
-                authorSearchField.clear();
-            });
+        searchAuthorsTask.setOnSucceeded(e -> {
+            authorTableView.getItems().setAll(searchAuthorsTask.getValue());
         });
 
-        searchAuthorTask.setOnFailed(e -> {
-            showError("Error searching for authors: " + searchAuthorTask.getException().getMessage());
+        searchAuthorsTask.setOnFailed(e -> {
+            showError("Error searching authors: " + searchAuthorsTask.getException().getMessage());
         });
 
-        new Thread(searchAuthorTask).start();
-    }
-
-    private void setupSelectedAuthorsListView() {
-        setupSelectedAuthorsListView(selectedAuthorsListView);
-    }
-
-
-    @SuppressWarnings("unused")
-    private void setupSelectedAuthorsListView(ListView<Author> listView) {
-        listView.setCellFactory(lv -> new ListCell<Author>() {
-            @Override
-            protected void updateItem(Author author, boolean empty) {
-                super.updateItem(author, empty);
-                if (empty || author == null) {
-                    setText(null);
-                } else {
-                    setText(author.getName());
-                }
-            }
-        });
+        new Thread(searchAuthorsTask).start();
     }
 
     private void updateSelectedAuthorsListView() {
@@ -357,12 +315,12 @@ public class BookController implements Initializable {
         selectedAuthorsListView.getItems().addAll(selectedAuthors);
     }
 
+
     private void clearFields() {
         isbnField.clear();
         titleField.clear();
         genreComboBox.setValue(null);
         ratingComboBox.setValue(null);
-        authorSearchField.clear();
         selectedAuthors.clear();
         selectedAuthorsListView.getItems().clear();
     }
