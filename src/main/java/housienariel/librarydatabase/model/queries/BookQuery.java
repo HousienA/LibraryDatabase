@@ -59,7 +59,7 @@ public class BookQuery implements BookDAO {
         return null;
     }
 
-    // error
+    
     @Override
     public List<Book> getAllBooks() throws BooksDbException {
         List<Book> books = new ArrayList<>();
