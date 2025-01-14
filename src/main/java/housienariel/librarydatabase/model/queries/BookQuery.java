@@ -170,6 +170,35 @@ public class BookQuery implements BookDAO {
     }
 
     @Override
+    public List<Author> getBookAuthors(String isbn) throws BooksDbException {
+        try {
+            Document query = new Document("ISBN", isbn);
+            Document book = bookCollection.find(query).first();
+
+            if (book != null && book.containsKey("author_id")) {
+                List<Integer> authorIds = book.getList("author_id", Integer.class);
+
+                List<Author> authors = new ArrayList<>();
+                for (Integer authorId : authorIds) {
+                    Document authorQuery = new Document("_id", authorId);
+                    Document authorDoc = bookCollection.find(authorQuery).first();
+
+                    if (authorDoc != null) {
+                        String name = authorDoc.getString("name");
+                        authors.add(new Author(name));
+                    }
+                }
+
+                return authors;
+            }
+
+            return new ArrayList<>();
+        } catch (Exception e) {
+            throw new BooksDbException("Error getting book authors: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public List<Author> searchAuthorsByName(String name) throws BooksDbException {
         List<Author> authors = new ArrayList<>();
         try {

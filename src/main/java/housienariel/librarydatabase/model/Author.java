@@ -43,4 +43,9 @@ public class Author {
     public void setAuthorDob(Date authorDob) {
         this.authorDob = authorDob;
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }
