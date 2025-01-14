@@ -47,6 +47,15 @@
         </VBox>
     </GridPane>
 
+    <!-- Author TableView -->
+    <Label text="Author List:"/>
+    <TableView fx:id="authorTableView" VBox.vgrow="ALWAYS" prefHeight="200.0">
+        <columns>
+            <TableColumn text="Name" />
+            <TableColumn text="Date of Birth" />
+        </columns>
+    </TableView>
+
     <!-- Buttons -->
     <HBox spacing="10">
         <Button fx:id="addButton" text="Add Book"
