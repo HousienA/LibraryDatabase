@@ -150,7 +150,6 @@ public class BookController implements Initializable {
                     book.setRating(new Rating(0, ratingComboBox.getValue()));
                 }
 
-                // Collect selected authors' ObjectIds
                 List<ObjectId> authorIds = new ArrayList<>();
                 for (Author author : selectedAuthors) {
                     authorIds.add(author.getAuthorId());

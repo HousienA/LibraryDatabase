@@ -6,6 +6,7 @@ import java.util.List;
 import org.bson.types.ObjectId;
 
 public class Book {
+
     private String ISBN;
     private String title;
     private Genre genre;
@@ -24,6 +25,7 @@ public class Book {
         this.rating = rating;
         this.authors = new ArrayList<>();
     }
+
     public String getISBN() {
         return ISBN;
     }
@@ -84,6 +86,4 @@ public class Book {
                 ", authors=" + authors +
                 '}';
     }
-
-
 }

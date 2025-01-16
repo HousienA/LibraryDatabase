@@ -9,7 +9,8 @@ public class Author {
     private ObjectId authorId;
     private String name;
     private Date authorDob;
-    public Author(@SuppressWarnings("exports") ObjectId authorId, String name, Date authorDob) {
+
+    public Author(ObjectId authorId, String name, Date authorDob) {
         this.authorId = authorId;
         this.name = name;
         this.authorDob = authorDob;
@@ -19,12 +20,11 @@ public class Author {
         this.name = name;
     }
 
-    @SuppressWarnings("exports")
     public ObjectId getAuthorId() {
         return authorId;
     }
 
-    public void setAuthorId(@SuppressWarnings("exports") ObjectId authorId) {
+    public void setAuthorId(ObjectId authorId) {
         this.authorId = authorId;
     }
 
