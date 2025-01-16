@@ -148,27 +148,39 @@ public class BookQuery implements BookDAO {
         return books;
     }
 
+    @Override
     public void addAuthorToBook(String isbn, ObjectId authorId) throws BooksDbException {
         try {
-            Document query = new Document("ISBN", isbn);
-            Document update = new Document("$push", new Document("author_ids", authorId));
-            bookCollection.updateOne(query, update);
+            Document bookQuery = new Document("ISBN", isbn);
+            Document updateBook = new Document("$push", new Document("author_ids", authorId));
+            bookCollection.updateOne(bookQuery, updateBook);
+
+            Document authorQuery = new Document("_id", authorId);
+            Document updateAuthor = new Document("$push", new Document("book_ids", bookQuery.get("_id")));
+            bookCollection.updateOne(authorQuery, updateAuthor);
+
         } catch (Exception e) {
-            throw new BooksDbException("Error adding author to book: " + e.getMessage());
+            throw new BooksDbException("Error adding author to book: " + e.getMessage(), e);
         }
     }
 
 
+
+    @Override
     public void removeAuthorFromBook(String isbn, ObjectId authorId) throws BooksDbException {
         try {
-            Document query = new Document("ISBN", isbn);
-            Document update = new Document("$pull", new Document("author_ids", authorId));
-            bookCollection.updateOne(query, update);
+            Document bookQuery = new Document("ISBN", isbn);
+            Document updateBook = new Document("$pull", new Document("author_ids", authorId));
+            bookCollection.updateOne(bookQuery, updateBook);
+
+            Document authorQuery = new Document("_id", authorId);
+            Document updateAuthor = new Document("$pull", new Document("book_ids", bookQuery.get("_id")));
+            bookCollection.updateOne(authorQuery, updateAuthor);
+
         } catch (Exception e) {
-            throw new BooksDbException("Error removing author from book: " + e.getMessage());
+            throw new BooksDbException("Error removing author from book: " + e.getMessage(), e);
         }
     }
-
 
     @Override
     public List<Author> getBookAuthors(String isbn) throws BooksDbException {
