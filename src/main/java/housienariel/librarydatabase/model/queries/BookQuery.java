@@ -109,9 +109,10 @@ public class BookQuery implements BookDAO {
     @Override
     public List<Book> searchBooks(String searchTerm) throws BooksDbException {
         List<Book> books = new ArrayList<>();
+        List<Author> authors = new ArrayList<>();
         try {
-            Document query = new Document("title", new Document("$regex", searchTerm).append("$options", "i"));
-            for (Document doc : bookCollection.find(query)) {
+            Document bookQuery = new Document("title", new Document("$regex", searchTerm).append("$options", "i"));
+            for (Document doc : bookCollection.find(bookQuery)) {
                 Genre genre = new Genre(doc.getObjectId("genre_id"), null);
                 Rating rating = doc.containsKey("rating") ? new Rating(null, doc.getInteger("rating")) : null;
                 books.add(new Book(
@@ -121,11 +122,19 @@ public class BookQuery implements BookDAO {
                         rating
                 ));
             }
+
+            authors = searchAuthorsByName(searchTerm);
+
+            if (!authors.isEmpty()) {
+                System.out.println("Authors matching search term: ");
+                authors.forEach(author -> System.out.println(author.getName()));
+            }
         } catch (Exception e) {
-            throw new BooksDbException("Error searching for books", e);
+            throw new BooksDbException("Error searching for books and authors", e);
         }
         return books;
     }
+
 
     @Override
     public List<Book> searchBooksByRating(int rating) throws BooksDbException {
