@@ -88,12 +88,12 @@ public class AuthorQuery implements AuthorDAO {
     }
 
     @Override
-    public void deleteAuthor(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
+    public void deleteAuthor(ObjectId authorId) throws BooksDbException {
         try {
             Document update = new Document("$pull",
-                new Document("authorIds", authorId));
+                new Document("author_id", authorId));
             bookCollection.updateMany(
-                new Document("authorIds", authorId),
+                new Document("author_id", authorId),
                 update
             );
 
@@ -103,6 +103,7 @@ public class AuthorQuery implements AuthorDAO {
             throw new BooksDbException("Error deleting author: " + e.getMessage(), e);
         }
     }
+
 
     @Override
     public List<Author> searchAuthorsByName(String namePattern) throws BooksDbException {
@@ -128,7 +129,7 @@ public class AuthorQuery implements AuthorDAO {
     public List<String> getAuthorsBooks(@SuppressWarnings("exports") ObjectId authorId) throws BooksDbException {
         try {
             List<String> bookIsbns = new ArrayList<>();
-            Document query = new Document("author_id", authorId);
+            Document query = new Document("author_ids", authorId);
             for (Document bookDoc : bookCollection.find(query)) {
                 bookIsbns.add(bookDoc.getString("ISBN"));
             }

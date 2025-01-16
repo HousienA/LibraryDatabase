@@ -16,6 +16,11 @@ public class Author {
         this.authorDob = authorDob;
     }
 
+    public Author(ObjectId authorId, String name) {
+        this.authorId = authorId;
+        this.name = name;
+    }
+
     public Author(String name) {
         this.name = name;
     }

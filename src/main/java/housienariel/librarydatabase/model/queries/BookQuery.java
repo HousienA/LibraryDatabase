@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -147,27 +148,27 @@ public class BookQuery implements BookDAO {
         return books;
     }
 
-    @Override
-    public void addAuthorToBook(String isbn, int authorId) throws BooksDbException {
+    public void addAuthorToBook(String isbn, ObjectId authorId) throws BooksDbException {
         try {
             Document query = new Document("ISBN", isbn);
-            Document update = new Document("$push", new Document("author_id", authorId));
+            Document update = new Document("$push", new Document("author_ids", authorId));
             bookCollection.updateOne(query, update);
         } catch (Exception e) {
             throw new BooksDbException("Error adding author to book: " + e.getMessage());
         }
     }
 
-    @Override
-    public void removeAuthorFromBook(String isbn, int authorId) throws BooksDbException {
+
+    public void removeAuthorFromBook(String isbn, ObjectId authorId) throws BooksDbException {
         try {
             Document query = new Document("ISBN", isbn);
-            Document update = new Document("$pull", new Document("author_id", authorId));
+            Document update = new Document("$pull", new Document("author_ids", authorId));
             bookCollection.updateOne(query, update);
         } catch (Exception e) {
             throw new BooksDbException("Error removing author from book: " + e.getMessage());
         }
     }
+
 
     @Override
     public List<Author> getBookAuthors(String isbn) throws BooksDbException {
@@ -175,20 +176,19 @@ public class BookQuery implements BookDAO {
             Document query = new Document("ISBN", isbn);
             Document book = bookCollection.find(query).first();
 
-            if (book != null && book.containsKey("author_id")) {
-                List<Integer> authorIds = book.getList("author_id", Integer.class);
+            if (book != null && book.containsKey("author_ids")) {
+                List<ObjectId> authorIds = book.getList("author_ids", ObjectId.class);
 
                 List<Author> authors = new ArrayList<>();
-                for (Integer authorId : authorIds) {
+                for (ObjectId authorId : authorIds) {
                     Document authorQuery = new Document("_id", authorId);
                     Document authorDoc = bookCollection.find(authorQuery).first();
 
                     if (authorDoc != null) {
                         String name = authorDoc.getString("name");
-                        authors.add(new Author(name));
+                        authors.add(new Author(authorId, name));
                     }
                 }
-
                 return authors;
             }
 
@@ -197,6 +197,7 @@ public class BookQuery implements BookDAO {
             throw new BooksDbException("Error getting book authors: " + e.getMessage(), e);
         }
     }
+
 
     @Override
     public List<Author> searchAuthorsByName(String name) throws BooksDbException {
