@@ -162,7 +162,7 @@ public class AuthorController implements Initializable {
     private void setupTableView() {
         TableColumn<Author, String> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(data -> new SimpleStringProperty(
-            data.getValue().getAuthorId() != null ? data.getValue().getAuthorId().toString() : ""));
+            data.getValue().getAuthorId() != null ? data.getValue().getAuthorId().toString() : " "));
 
         TableColumn<Author, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
